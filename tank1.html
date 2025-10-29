@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>บ่อหน้าตึกโทร</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body data-tank-id="tank1">
+
+    <div class="dashboard-container">
+        <header class="header">
+            <div class="header-left">
+                <a href="index.html" class="back-button">← กลับหน้าหลัก</a>
+                <h1 id="dashboardTitle">Dashboard</h1>
+            </div>
+            <div class="header-right">
+                <a id="googleSheetLink" href="#" target="_blank" class="header-icon" title="เปิด Google Sheet">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                        <polyline points="15 3 21 3 21 9"></polyline>
+                        <line x1="10" y1="14" x2="21" y2="3"></line>
+                    </svg>
+                </a>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="info-column">
+                <div class="widget status-widget">
+                    <h3>สถานะปัจจุบัน</h3>
+                    <div id="alertBox" class="status-alert">กำลังรอข้อมูล...</div>
+                    <div class="status-metrics">
+                        <div class="metric-item">
+                            <span class="metric-label">ระดับน้ำ</span>
+                            <div id="currentHeight" class="metric-value">N/A</div>
+                        </div>
+                        <div class="metric-item">
+                             <span class="metric-label">ปริมาณในบ่อ</span>
+                            <div id="currentPercent" class="metric-value">N/A</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="widget details-widget">
+                    <h3>ข้อมูลบ่อ</h3>
+                    <div id="tankDetails"></div>
+                </div>
+                
+                <div class="action-buttons-container">
+                    <button id="openSheetBtn" class="action-btn">เปิด Google Sheet</button>
+                    <button id="showInsightsBtn" class="action-btn insights">ข้อมูลเชิงลึก</button>
+                </div>
+            </div>
+
+            <div class="main-column">
+                <div class="widget chart-widget">
+                    <h3>กราฟแสดงระดับน้ำ</h3>
+                    <div id="waterChart"></div>
+                </div>
+
+                <div class="widget table-widget">
+                    <h3>ประวัติข้อมูลล่าสุด</h3>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>วันที่</th>
+                                    <th>เวลา</th>
+                                    <th>ระดับ (m)</th>
+                                    <th>สถานะ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dataTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="last-updated">อัปเดตล่าสุด: <span id="lastUpdated">N/A</span></p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+
+    <div id="insightsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" id="closeModalBtn">×</span>
+            <h2>ข้อมูลเชิงลึก (1 ชั่วโมงล่าสุด)</h2>
+            <div class="insights-grid">
+                <div class="insight-item">
+                    <span>ค่าเฉลี่ยระดับน้ำ</span>
+                    <strong id="avgHeight">N/A</strong>
+                </div>
+                <div class="insight-item">
+                    <span>ระดับน้ำสูงสุด</span>
+                    <strong id="maxHeightInsight">N/A</strong>
+                </div>
+                <div class="insight-item">
+                    <span>ระดับน้ำต่ำสุด</span>
+                    <strong id="minHeightInsight">N/A</strong>
+                </div>
+                <div class="insight-item">
+                    <span>แนวโน้มปัจจุบัน</span>
+                    <strong id="currentTrend">N/A</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
