@@ -8,8 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
             location: 'หน้าตึกภาควิชาวิศวกรรมโทรคมนาคม',
             latitude: 13.727301,
             longitude: 100.776734,
-            maxHeight: 3, 
-            floodedThreshold: 2.5,
+            maxHeight: 2, 
+            floodedThreshold: 1.5,
             droughtThreshold: 0.5,
         },
         'tank2': {

@@ -5,8 +5,8 @@ document.addEventListener('DOMContentLoaded', () => {
         'tank1': {
             name: 'บ่อข้างตึกโทร',
             sheetUrl: 'https://docs.google.com/spreadsheets/d/1eQwqYfsLff8z5hsFMB2_cghDQ60zi8NAokpKibCP6S8/gviz/tq?sheet=Sheet1',
-            maxHeight: 3,
-            floodedThreshold: 2.5,
+            maxHeight: 2,
+            floodedThreshold: 1.5,
             droughtThreshold: 0.5,
             page: 'tank1.html',
             latitude: 13.727301,
@@ -149,7 +149,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function fetchAndDisplayTankData(tankId, config) {
         try {
-            const url = config.sheetUrl + '&tq=SELECT%20A,B,C%20ORDER%20BY%20A%20DESC,%20B%20DESC%20LIMIT%201';
+            // 💡 --- START MODIFICATION ---
+            let query;
+            if (tankId === 'tank2') {
+                // สำหรับ tank2, ดึงคอลัมน์ config (J,K,L) และเรียงลำดับข้อมูลเพื่อหาแถวล่าสุด
+                // เราไม่สามารถใช้ LIMIT 1 ได้ เพราะค่า config อาจอยู่ในแถวที่เก่ากว่า
+                query = 'SELECT%20A,B,C,J,K,L%20ORDER%20BY%20A%20DESC,%20B%20DESC';
+            } else {
+                // สำหรับ tank อื่นๆ ใช้ query เดิมที่ optimize แล้ว
+                query = 'SELECT%20A,B,C%20ORDER%20BY%20A%20DESC,%20B%20DESC%20LIMIT%201';
+            }
+            const url = config.sheetUrl + '&tq=' + query;
+            // 💡 --- END MODIFICATION ---
+
             const res = await fetch(url);
             if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
 
@@ -159,9 +171,52 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const json = JSON.parse(match[1]);
             const rows = json.table.rows;
+
+            // 💡 --- START MODIFICATION ---
+            // ตรวจสอบและอัปเดต config แบบไดนามิกสำหรับ tank2
+            if (tankId === 'tank2' && rows.length > 0) {
+                let lastTankDepth = null;
+                let lastFlooded = null;
+                let lastDrought = null;
+
+                // วนค้นหาจากแถวล่างสุด (ข้อมูลเก่าสุด) ขึ้นมา หรือจากบนสุด (ใหม่สุด) ลงไปก็ได้
+                // แต่วิธีที่แน่นอนที่สุดคือการวนจากท้ายตาราง (เหมือน app.js)
+                for (let i = rows.length - 1; i >= 0; i--) {
+                    const rowCells = rows[i].c;
+
+                    // หมายเหตุ: index 3, 4, 5 คือ J, K, L จาก query
+                    if (lastTankDepth === null && rowCells[3] && rowCells[3].v !== null) {
+                        lastTankDepth = parseFloat(rowCells[3].v);
+                    }
+                    if (lastFlooded === null && rowCells[4] && rowCells[4].v !== null) {
+                        lastFlooded = parseFloat(rowCells[4].v);
+                    }
+                    if (lastDrought === null && rowCells[5] && rowCells[5].v !== null) {
+                        lastDrought = parseFloat(rowCells[5].v);
+                    }
+
+                    if (lastTankDepth !== null && lastFlooded !== null && lastDrought !== null) {
+                        break; // เจอ config ครบแล้ว
+                    }
+                }
+
+                // อัปเดตค่า config ใน TANK_CONFIG (ตัวแปร config คือ reference ไปยัง object นั้น)
+                if (lastTankDepth !== null && !isNaN(lastTankDepth)) {
+                    config.maxHeight = lastTankDepth;
+                }
+                if (lastFlooded !== null && !isNaN(lastFlooded)) {
+                    config.floodedThreshold = lastFlooded;
+                }
+                if (lastDrought !== null && !isNaN(lastDrought)) {
+                    config.droughtThreshold = lastDrought;
+                }
+            }
+            // 💡 --- END MODIFICATION ---
+
             if (rows.length === 0) throw new Error('No data found');
 
-            const latestRow = rows[0];
+            // ใช้แถวแรกสุด (rows[0]) เพราะเรา ORDER BY DESC มาแล้ว
+            const latestRow = rows[0]; 
             const dateObj = latestRow.c[0]?.v ? parseGoogleDate(latestRow.c[0].v) : null;
             const timeObj = latestRow.c[1]?.v ? parseGoogleDate(latestRow.c[1].v) : null;
             const height = parseFloat(latestRow.c[2]?.v);
@@ -173,7 +228,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 timeObj.getHours(), timeObj.getMinutes(), timeObj.getSeconds()
             ).getTime();
 
-            updateCardUI(tankId, config, { timestamp, height });
+            // ส่ง config ที่ "อาจจะ" ถูกอัปเดตแล้ว ไปให้ updateCardUI
+            updateCardUI(tankId, config, { timestamp, height }); 
 
         } catch (e) {
             console.error(`Error fetching data for ${tankId}:`, e);
@@ -200,7 +256,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.getElementById(`height-${tankId}`).textContent = `${height.toFixed(2)} m`;
         document.getElementById(`percent-${tankId}`).textContent = `${percentage.toFixed(1)} %`;
-        document.getElementById(`updated-${tankId}`).textContent = date.toLocaleString('th-TH', { timeStyle: 'short' });
+        
+        // --- 💡 ปรับบรรทัดนี้ ---
+        // เพิ่ม dateStyle: 'medium' เพื่อแสดงวันที่ (เช่น 9 พ.ย. 2568, 15:08)
+        document.getElementById(`updated-${tankId}`).textContent = date.toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' });
     }
     
     function displayErrorOnCard(tankId, message) {
