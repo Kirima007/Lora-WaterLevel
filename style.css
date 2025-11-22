@@ -429,20 +429,3 @@ tbody tr:last-child td { border-bottom: none; }
     from { transform: translateY(-100%); }
     to { transform: translateY(0); }
 }
-
-/* --- Brush Chart Styles --- */
-#chart-wrapper {
-    display: flex;
-    flex-direction: column;
-    height: 450px; /* เพิ่มความสูงรวม */
-}
-
-#chart-main {
-    flex-grow: 1;
-    min-height: 300px; /* กราฟบนใหญ่หน่อย */
-}
-
-#chart-brush {
-    height: 130px; /* กราฟล่างเล็กๆ */
-    margin-top: 10px;
-}
