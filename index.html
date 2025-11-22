@@ -12,7 +12,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
 </head>
-<body class="no-scroll"> <div class="overview-page-container">
+<body class="no-scroll"> 
+    
+    <div class="overview-page-container collapsed">
         <aside class="sidebar">
             <header class="header">
                 <div class="header-left">
@@ -24,7 +26,28 @@
             </header>
             <main class="overview-grid" id="overviewGrid">
                 </main>
+            <main class="overview-grid" id="overviewGrid">
+        </main>
+
+        <footer class="sidebar-footer">
+            <div class="footer-dev">
+                Developed by <strong>Weerapat Charoenwan & Team</strong>
+            </div>
+            <div class="footer-org">
+                AIOT LAB , IOT SYSTEM & INFORMATION<br>KMITL
+            </div>
+            <div class="footer-tech">
+                <span class="tech-sparkle">✦</span> Powered by <strong>GEMINI PRO</strong>
+            </div>
+        </footer>
+    </aside>
         </aside>
+
+        <button id="sidebarToggle" class="sidebar-toggle" title="ย่อ/ขยาย เมนู">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+        </button>
 
         <div id="map"></div>
     </div>

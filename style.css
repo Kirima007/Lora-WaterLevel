@@ -15,6 +15,7 @@
     
     --animation-duration: 0.3s;
     --animation-ease: ease-in-out;
+    --sidebar-width: 400px; /* กำหนดตัวแปรความกว้าง Sidebar */
 }
 
 /* --- การตั้งค่าพื้นฐาน --- */
@@ -46,10 +47,12 @@ h1, h2, h3 {
 .overview-page-container {
     display: flex;
     height: 100vh;
+    position: relative; /* สำคัญสำหรับปุ่ม Toggle Absolute */
+    overflow: hidden;
 }
 
 .sidebar {
-    width: 400px;
+    width: var(--sidebar-width);
     flex-shrink: 0;
     background-color: var(--bg-color);
     display: flex;
@@ -57,8 +60,62 @@ h1, h2, h3 {
     height: 100%;
     box-shadow: 2px 0 10px rgba(0,0,0,0.05);
     z-index: 10;
+    
+    /* Animation Properties */
+    transition: width var(--animation-duration) var(--animation-ease), transform var(--animation-duration) var(--animation-ease);
+    white-space: nowrap; /* ป้องกันข้อความแตกบรรทัดตอนย่อ */
 }
 
+/* --- Sidebar Toggle Button Styles --- */
+.sidebar-toggle {
+    position: absolute;
+    top: 20px; /* ตำแหน่งแนวตั้ง */
+    left: var(--sidebar-width); /* เริ่มต้นติดกับขอบ Sidebar */
+    
+    width: 24px;
+    height: 50px;
+    background-color: var(--widget-bg-color);
+    border: 1px solid var(--border-color);
+    border-left: none; /* ลบเส้นขอบซ้ายให้ดูเชื่อมกับ Sidebar */
+    border-radius: 0 8px 8px 0; /* โค้งเฉพาะด้านขวา */
+    cursor: pointer;
+    z-index: 1000; /* อยู่เหนือแผนที่ */
+    
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    box-shadow: 4px 2px 5px rgba(0,0,0,0.05);
+    
+    transition: left var(--animation-duration) var(--animation-ease), background-color 0.2s;
+}
+
+.sidebar-toggle:hover {
+    background-color: #f0f0f0;
+    color: var(--accent-color);
+}
+
+.sidebar-toggle svg {
+    transition: transform var(--animation-duration) var(--animation-ease);
+}
+
+/* --- Collapsed State (สถานะเมื่อปิด Sidebar) --- */
+.overview-page-container.collapsed .sidebar {
+    width: 0;
+    border-right: none;
+    overflow: hidden; /* ซ่อนเนื้อหาข้างใน */
+}
+
+.overview-page-container.collapsed .sidebar-toggle {
+    left: 0; /* เลื่อนปุ่มกลับไปชิดซ้ายจอ */
+}
+
+.overview-page-container.collapsed .sidebar-toggle svg {
+    transform: rotate(180deg); /* หมุนลูกศรกลับด้าน */
+}
+
+
+/* --- Sidebar Components --- */
 .sidebar .header {
     background-color: var(--widget-bg-color);
     border-bottom: 1px solid var(--border-color);
@@ -70,18 +127,22 @@ h1, h2, h3 {
     color: var(--text-primary);
 }
 .sidebar .header .header-left {
+    display: flex; /* เพิ่ม flex เพื่อจัด icon กับ text */
+    align-items: center;
     gap: 1rem;
 }
 .sidebar .header .header-logo-icon {
     width: 32px;
     height: 32px;
     color: var(--accent-color);
+    flex-shrink: 0;
 }
 
 #map {
     flex-grow: 1;
     height: 100%;
     z-index: 5;
+    transition: width var(--animation-duration) var(--animation-ease); /* Smooth resize */
 }
 
 .overview-grid {
@@ -91,6 +152,8 @@ h1, h2, h3 {
     padding: 1rem;
     overflow-y: auto;
     flex-grow: 1;
+    /* ซ่อน Scrollbar แนวนอนตอน Animation */
+    overflow-x: hidden; 
 }
 
 /* --- Custom Scrollbar for Sidebar --- */
@@ -119,7 +182,8 @@ h1, h2, h3 {
     box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     transition: all var(--animation-duration) var(--animation-ease);
     cursor: pointer;
-    border-left: 5px solid var(--border-color); /* Default left border */
+    border-left: 5px solid var(--border-color);
+    min-width: 350px; /* ป้องกัน Card บีบตัวตอน Animation ปิด */
 }
 
 .overview-card:hover {
@@ -131,6 +195,7 @@ h1, h2, h3 {
 .overview-card.highlight {
     border-left-color: var(--accent-color);
     box-shadow: 0 4px 15px rgba(245, 130, 32, 0.25);
+    background-color: #fff8f3;
 }
 
 /* --- Change left border color based on status --- */
@@ -210,23 +275,132 @@ h1, h2, h3 {
 }
 
 
-/* --- Leaflet Map Popup Styles --- */
+/* --- Leaflet Map Popup Styles (Updated Fix Spacing) --- */
 .leaflet-popup-content-wrapper {
     border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    padding: 0; 
+    overflow: hidden;
 }
+
 .leaflet-popup-content {
     font-family: 'Inter', sans-serif;
     font-size: 1rem;
-    margin: 12px 18px;
+    margin: 0 !important;
+    width: 280px !important;
 }
+
 .leaflet-popup-tip {
     background: white;
 }
+
 .leaflet-popup-close-button {
-    padding: 8px 8px 0 0;
+    color: #fff !important;
+    text-shadow: 0 0 2px rgba(0,0,0,0.3);
+    font-size: 24px !important;
+    top: 12px !important;    
+    right: 12px !important;  
+    width: 24px !important;
+    height: 24px !important;
+    line-height: 24px !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
 }
 
+.leaflet-popup-close-button:hover {
+    color: #eee !important;
+    background-color: rgba(255,255,255,0.2);
+    border-radius: 50%;
+}
+
+.popup-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.popup-header {
+    padding: 14px 16px;
+    padding-right: 50px; /* Space for close button */
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+}
+
+.popup-header.status-normal { background-color: var(--normal-color); }
+.popup-header.status-high { background-color: var(--high-color); }
+.popup-header.status-low { background-color: var(--low-color); color: var(--text-primary); }
+.popup-header.status-low .leaflet-popup-close-button { color: var(--text-primary) !important; text-shadow: none; }
+.popup-header.status-low .leaflet-popup-close-button:hover { background-color: rgba(0,0,0,0.1); }
+
+.popup-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: inherit;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 60%;
+}
+
+.popup-status-badge {
+    background: rgba(255,255,255,0.25);
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    white-space: nowrap;
+}
+.popup-header.status-low .popup-status-badge { background: rgba(0,0,0,0.1); }
+
+.popup-body {
+    padding: 16px;
+    background: #fff;
+}
+
+.popup-metrics {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    text-align: center;
+}
+
+.popup-metric-item {
+    flex: 1;
+}
+.popup-metric-value {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: block;
+}
+.popup-metric-label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.popup-footer {
+    border-top: 1px solid #eee;
+    padding-top: 10px;
+    text-align: center;
+}
+
+.popup-btn {
+    display: inline-block;
+    text-decoration: none;
+    color: var(--accent-color);
+    font-weight: 700;
+    font-size: 0.9rem;
+    transition: color 0.2s;
+}
+.popup-btn:hover {
+    color: #d16200;
+    text-decoration: underline;
+}
 
 /* --- Dashboard Detail Page --- */
 .dashboard-container {
@@ -326,6 +500,9 @@ tbody tr:last-child td { border-bottom: none; }
     .sidebar { width: 100%; height: 50vh; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
     #map { height: 50vh; }
     .sidebar .header h1 { font-size: 1.25rem; }
+    
+    /* ซ่อนปุ่ม Toggle บนมือถือ เพราะใช้ Layout บน-ล่าง */
+    .sidebar-toggle { display: none; }
 
     /* Detail Page Responsive */
     .main-content {
@@ -428,4 +605,99 @@ tbody tr:last-child td { border-bottom: none; }
 @keyframes slideDown {
     from { transform: translateY(-100%); }
     to { transform: translateY(0); }
+}
+/* --- Credits Footer Styles --- */
+
+/* 1. Sidebar Footer (สำหรับหน้า index) */
+.sidebar-footer {
+    margin-top: auto; /* ดันลงล่างสุดเสมอ */
+    padding: 1.5rem;
+    background-color: #ffffff;
+    border-top: 1px solid var(--border-color);
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.sidebar-footer strong {
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+.footer-dev {
+    margin-bottom: 8px;
+}
+
+.footer-org {
+    font-size: 0.75rem;
+    color: var(--accent-color); /* สีส้ม KMITL */
+    font-weight: 600;
+    margin-bottom: 12px;
+    opacity: 0.9;
+}
+
+.footer-tech {
+    display: inline-block;
+    background: linear-gradient(135deg, #f0f4ff 0%, #e6eeff 100%); /* พื้นหลังฟ้าอ่อนจางๆ สไตล์ AI */
+    color: #4b6cb7; /* สีน้ำเงินโทน AI */
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    border: 1px solid #dae2f5;
+}
+
+.footer-tech strong {
+    color: #2c3e50;
+}
+
+.tech-sparkle {
+    color: #F58220; /* ดาวสีส้ม */
+    font-size: 1em;
+    margin-right: 2px;
+}
+
+/* 2. Main Footer (สำหรับหน้า tank dashboard) */
+.main-footer {
+    margin-top: 60px;
+    padding: 30px 0;
+    border-top: 1px solid var(--border-color);
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+.footer-title {
+    font-size: 1rem;
+    margin-bottom: 6px;
+    color: var(--text-primary);
+}
+
+.footer-subtitle {
+    font-size: 0.9rem;
+    color: var(--accent-color);
+    font-weight: 600;
+    margin-bottom: 15px;
+}
+
+.footer-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    background: #f8f9fa;
+    padding: 6px 16px;
+    border-radius: 30px;
+    border: 1px solid #eee;
+    color: #666;
+}
+
+.footer-badge .tech-icon {
+    color: #F58220;
+    animation: pulse 2s infinite; /* เอฟเฟกต์กระพริบเบาๆ */
+}
+
+@keyframes pulse {
+    0% { opacity: 0.6; transform: scale(0.95); }
+    50% { opacity: 1; transform: scale(1.1); }
+    100% { opacity: 0.6; transform: scale(0.95); }
 }

@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function init() {
         initMap(); 
         initSvgOverlay();
+        setupSidebarToggle(); 
         
         const statusBanner = document.createElement('div');
         statusBanner.id = 'connectionStatus';
@@ -27,12 +28,10 @@ document.addEventListener('DOMContentLoaded', () => {
         overviewGrid.addEventListener('scroll', updateLines);
 
         try {
-            // 1. Load Config
             const response = await fetch('config.json');
             if (!response.ok) throw new Error('Failed to load config.json');
             TANK_CONFIG = await response.json();
 
-            // 2. Create Cards & Start
             createAllTankCards();
             setupCardInteractions();
 
@@ -45,7 +44,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function initMap() {
-        map = L.map('map').setView([13.727, 100.776], 17);
+        // 1. ปิด Zoom Control ตัวเดิม (ที่อยู่ซ้ายบน)
+        map = L.map('map', { zoomControl: false }).setView([13.727, 100.776], 17);
+        
+        // 2. สร้าง Zoom Control ใหม่ ให้ไปอยู่ "ขวาบน" (topright) แทน
+        L.control.zoom({ position: 'topright' }).addTo(map);
+
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
@@ -55,6 +59,21 @@ document.addEventListener('DOMContentLoaded', () => {
         svgOverlay = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         svgOverlay.id = 'line-overlay';
         document.body.appendChild(svgOverlay);
+    }
+
+    function setupSidebarToggle() {
+        const toggleBtn = document.getElementById('sidebarToggle');
+        const container = document.querySelector('.overview-page-container');
+        
+        if (!toggleBtn) return;
+
+        toggleBtn.addEventListener('click', () => {
+            container.classList.toggle('collapsed');
+            setTimeout(() => {
+                map.invalidateSize();
+                updateLines();
+            }, 350);
+        });
     }
 
     function createAllTankCards() {
@@ -77,32 +96,85 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </a>`;
             overviewGrid.innerHTML += cardHTML;
-            const marker = L.marker([config.latitude, config.longitude]).addTo(map).bindPopup(`<b>${config.name}</b>`);
+
+            const marker = L.marker([config.latitude, config.longitude]).addTo(map);
+            marker.bindPopup(createPopupHTML(config, null), {
+                className: 'custom-popup',
+                minWidth: 280
+            });
+
             markers[tankId] = marker;
+
             const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
             svgOverlay.appendChild(line);
             lines[tankId] = line;
         }
     }
     
+    function createPopupHTML(config, data) {
+        if (!data) {
+            return `
+            <div class="popup-card">
+                <div class="popup-header" style="background-color: #999;"><h3>${config.name}</h3></div>
+                <div class="popup-body" style="text-align: center; padding: 20px;">
+                    <div class="loader" style="border-color: #eee; border-top-color: #666;"></div>
+                    <p style="font-size: 0.9rem; color: #666; margin-top: 10px;">กำลังโหลดข้อมูล...</p>
+                </div>
+            </div>`;
+        }
+        const { height, percentage, status, statusEmoji } = data;
+        return `
+        <div class="popup-card">
+            <div class="popup-header status-${status.className}">
+                <h3>${config.name}</h3>
+                <span class="popup-status-badge">${statusEmoji} ${status.label}</span>
+            </div>
+            <div class="popup-body">
+                <div class="popup-metrics">
+                    <div class="popup-metric-item">
+                        <span class="popup-metric-value">${height.toFixed(2)} m</span>
+                        <span class="popup-metric-label">ระดับน้ำ</span>
+                    </div>
+                    <div class="popup-metric-item" style="border-left: 1px solid #eee;">
+                        <span class="popup-metric-value">${percentage.toFixed(1)} %</span>
+                        <span class="popup-metric-label">ความจุ</span>
+                    </div>
+                </div>
+                <div class="popup-footer">
+                    <a href="${config.page}" class="popup-btn">ดูรายละเอียดทั้งหมด →</a>
+                </div>
+            </div>
+        </div>`;
+    }
+
     function setupCardInteractions() {
         for (const tankId in markers) {
             markers[tankId].on('click', () => {
-                const card = document.getElementById(`card-${tankId}`);
-                document.querySelectorAll('.overview-card').forEach(c => c.classList.remove('highlight'));
-                card.classList.add('highlight');
-                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                updateLines();
+                highlightSidebarCard(tankId);
             });
         }
         overviewGrid.addEventListener('mouseover', (e) => {
             const card = e.target.closest('.overview-card');
-            if (card && markers[card.dataset.tankId]) markers[card.dataset.tankId].openPopup();
+            if (card && markers[card.dataset.tankId]) {
+                markers[card.dataset.tankId].openPopup();
+            }
         });
-        overviewGrid.addEventListener('mouseout', (e) => {
-             const card = e.target.closest('.overview-card');
-             if (card && markers[card.dataset.tankId]) markers[card.dataset.tankId].closePopup();
-        });
+    }
+
+    function highlightSidebarCard(tankId) {
+        // ลบโค้ดที่สั่งเปิด Sidebar ออก ตามที่ต้องการ
+        const card = document.getElementById(`card-${tankId}`);
+        if(card) {
+            document.querySelectorAll('.overview-card').forEach(c => c.classList.remove('highlight'));
+            card.classList.add('highlight');
+            
+            // Scroll หา Card เฉพาะตอนที่ Sidebar เปิดอยู่เท่านั้น
+            const container = document.querySelector('.overview-page-container');
+            if (!container.classList.contains('collapsed')) {
+                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            updateLines();
+        }
     }
 
     async function fetchSheetData(baseUrl, sheetName, query) {
@@ -160,6 +232,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const percentage = (height / config.maxHeight) * 100;
         const status = getStatus(height, config);
         const date = new Date(timestamp);
+        const statusEmoji = status.label === "น้ำท่วม" ? "🌊" : status.label === "น้ำแห้ง" ? "☀️" : "💧";
+
         ['height', 'percent', 'updated'].forEach(key => {
             const el = document.getElementById(`${key}-${tankId}`);
             if(el) el.classList.remove('skeleton', 'skeleton-text');
@@ -167,7 +241,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const statusEl = document.getElementById(`status-${tankId}`);
         statusEl.className = 'overview-card-status'; 
         statusEl.classList.add(`alert-${status.className}`);
-        const statusEmoji = status.label === "น้ำท่วม" ? "🌊" : status.label === "น้ำแห้ง" ? "☀️" : "💧";
         statusEl.innerHTML = `<span>${statusEmoji} ${status.label}</span>`;
         const cardEl = document.getElementById(`card-${tankId}`);
         cardEl.classList.remove('status-high', 'status-normal', 'status-low');
@@ -175,18 +248,26 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById(`height-${tankId}`).textContent = `${height.toFixed(2)} m`;
         document.getElementById(`percent-${tankId}`).textContent = `${percentage.toFixed(1)} %`;
         document.getElementById(`updated-${tankId}`).textContent = date.toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' });
+
+        if (markers[tankId]) {
+            const popupContent = createPopupHTML(config, { height, percentage, status, statusEmoji });
+            markers[tankId].setPopupContent(popupContent);
+        }
     }
     
     function displayErrorOnCard(tankId) {
         const statusEl = document.getElementById(`status-${tankId}`);
-        statusEl.className = 'overview-card-status alert-error';
-        statusEl.innerHTML = `<span>⚠️ Error</span>`;
+        if (statusEl) {
+            statusEl.className = 'overview-card-status alert-error';
+            statusEl.innerHTML = `<span>⚠️ Error</span>`;
+        }
         ['height', 'percent', 'updated'].forEach(key => {
-            document.getElementById(`${key}-${tankId}`).classList.remove('skeleton', 'skeleton-text');
+            const el = document.getElementById(`${key}-${tankId}`);
+            if(el) el.classList.remove('skeleton', 'skeleton-text');
         });
-        document.getElementById(`height-${tankId}`).textContent = '-';
-        document.getElementById(`percent-${tankId}`).textContent = '-';
-        document.getElementById(`updated-${tankId}`).textContent = 'N/A';
+        const h = document.getElementById(`height-${tankId}`); if(h) h.textContent = '-';
+        const p = document.getElementById(`percent-${tankId}`); if(p) p.textContent = '-';
+        const u = document.getElementById(`updated-${tankId}`); if(u) u.textContent = 'N/A';
     }
     
     function showError(message) {
@@ -205,7 +286,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const marker = markers[tankId];
             const line = lines[tankId];
             if (!card || !marker || !line) continue;
-            if (card.classList.contains('highlight')) {
+            // เช็คเพิ่ม: วาดเส้นเฉพาะตอนที่ sidebar ไม่ได้ปิด (collapsed) อยู่
+            if (card.classList.contains('highlight') && !document.querySelector('.overview-page-container').classList.contains('collapsed')) {
                 const cardRect = card.getBoundingClientRect();
                 const x1 = cardRect.right;
                 const y1 = cardRect.top + (cardRect.height / 2);
