@@ -43,7 +43,7 @@
                             <div id="currentHeight" class="metric-value">N/A</div>
                         </div>
                         <div class="metric-item">
-                             <span class="metric-label">ปริมาณในบ่อ</span>
+                            <span class="metric-label">ปริมาณในบ่อ</span>
                             <div id="currentPercent" class="metric-value">N/A</div>
                         </div>
                     </div>
@@ -53,7 +53,7 @@
                     <h3>ข้อมูลบ่อ</h3>
                     <div id="tankDetails"></div>
                 </div>
-                
+
                 <div class="action-buttons-container">
                     <button id="openSheetBtn" class="action-btn">เปิด Google Sheet</button>
                     <button id="showInsightsBtn" class="action-btn insights">ข้อมูลเชิงลึก</button>
@@ -94,23 +94,39 @@
         <div class="modal-content">
             <span class="close-button" id="closeModalBtn">×</span>
             <h2>ข้อมูลเชิงลึก (1 ชั่วโมงล่าสุด)</h2>
-            <div class="insights-grid">
-                <div class="insight-item">
-                    <span>ค่าเฉลี่ยระดับน้ำ</span>
-                    <strong id="avgHeight">N/A</strong>
+
+            <div class="insights-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+
+                <div class="insight-item" style="grid-column: span 2; justify-content: space-between;">
+                    <span>แนวโน้มระดับน้ำ</span>
+                    <strong id="insightTrend">N/A</strong>
                 </div>
-                <div class="insight-item">
-                    <span>ระดับน้ำสูงสุด</span>
-                    <strong id="maxHeightInsight">N/A</strong>
+
+                <div class="insight-item" style="grid-column: span 2; justify-content: space-between;">
+                    <span>อัตราการเปลี่ยนแปลง</span>
+                    <strong id="insightRate">N/A</strong>
                 </div>
-                <div class="insight-item">
-                    <span>ระดับน้ำต่ำสุด</span>
-                    <strong id="minHeightInsight">N/A</strong>
+
+                <div class="insight-item" style="flex-direction: column; align-items: flex-start; gap: 5px;">
+                    <span style="font-size: 0.85em;">เวลาน้ำท่วมขัง</span>
+                    <strong id="insightFlood" style="font-size: 1.1em;">N/A</strong>
                 </div>
-                <div class="insight-item">
-                    <span>แนวโน้มปัจจุบัน</span>
-                    <strong id="currentTrend">N/A</strong>
+                <div class="insight-item" style="flex-direction: column; align-items: flex-start; gap: 5px;">
+                    <span style="font-size: 0.85em;">เวลาน้ำแห้งแล้ง</span>
+                    <strong id="insightDrought" style="font-size: 1.1em;">N/A</strong>
                 </div>
+
+                <div class="insight-item"
+                    style="flex-direction: column; align-items: flex-start; gap: 5px; border-bottom: none;">
+                    <span style="font-size: 0.85em;">ระดับสูงสุด (Max)</span>
+                    <strong id="insightMax" style="font-size: 1.1em;">N/A</strong>
+                </div>
+                <div class="insight-item"
+                    style="flex-direction: column; align-items: flex-start; gap: 5px; border-bottom: none;">
+                    <span style="font-size: 0.85em;">ระดับต่ำสุด (Min)</span>
+                    <strong id="insightMin" style="font-size: 1.1em;">N/A</strong>
+                </div>
+
             </div>
         </div>
     </div>

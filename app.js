@@ -248,26 +248,90 @@ document.addEventListener('DOMContentLoaded', () => {
         destroy() { if (this.chart) this.chart.destroy(); }
     }
 
+    // --- INSIGHTS MODAL FUNCTIONS (4 Rows Layout) ---
     function showInsightsPopup() {
         if (allData.length === 0) { alert('ยังไม่มีข้อมูล'); return; }
-        const oneHourAgo = allData[0].timestamp - (3600000);
-        const recentData = allData.filter(d => d.timestamp >= oneHourAgo);
-        const heights = recentData.map(d => d.height);
+
+        // 1. กรองข้อมูล 1 ชั่วโมงย้อนหลัง
+        const now = Date.now();
+        const oneHourAgo = now - (60 * 60 * 1000);
+        const data1h = allData.filter(d => d.timestamp >= oneHourAgo);
+        
+        if (data1h.length < 2) { 
+            alert('ข้อมูลใน 1 ชั่วโมงที่ผ่านมามีน้อยเกินไปสำหรับการวิเคราะห์'); 
+            return; 
+        }
+
+        // --- คำนวณ Rate & Trend ---
+        const latestPoint = data1h[0]; 
+        const oldestPoint = data1h[data1h.length - 1];
+        const timeDiffHours = (latestPoint.timestamp - oldestPoint.timestamp) / (1000 * 60 * 60);
+        let rateOfRise = 0;
+        
+        if (timeDiffHours > 0) {
+            rateOfRise = (latestPoint.height - oldestPoint.height) / timeDiffHours;
+        }
+
+        let trendIcon = '↔';
+        let trendText = 'ทรงตัว';
+        let trendColor = 'var(--text-secondary)';
+
+        if (rateOfRise > 0.01) { 
+            trendIcon = '↑'; trendText = 'กำลังเพิ่มขึ้น'; trendColor = 'var(--high-color)';
+        } else if (rateOfRise < -0.01) { 
+            trendIcon = '↓'; trendText = 'กำลังลดลง'; trendColor = 'var(--normal-color)';
+        }
+
+        // --- คำนวณ Duration (ท่วม/แล้ง) ---
+        const sortedData = [...data1h].sort((a, b) => a.timestamp - b.timestamp);
+        let floodMs = 0;
+        let droughtMs = 0;
+
+        for (let i = 0; i < sortedData.length - 1; i++) {
+            const p1 = sortedData[i];
+            const p2 = sortedData[i+1];
+            const diff = p2.timestamp - p1.timestamp;
+
+            if (p1.height > config.floodedThreshold) floodMs += diff;
+            if (p1.height < config.droughtThreshold) droughtMs += diff;
+        }
+
+        const formatDuration = (ms) => {
+            if (ms <= 0) return "-";
+            const min = Math.floor(ms / 60000);
+            return `${min} นาที`;
+        };
+
+        // --- คำนวณ Max / Min ---
+        const heights = data1h.map(d => d.height);
         const maxHeight = Math.max(...heights);
         const minHeight = Math.min(...heights);
-        const avgHeight = heights.reduce((a, b) => a + b, 0) / heights.length;
-        const latestHeight = recentData[0].height;
-        const olderHeight = recentData[recentData.length - 1].height;
-        let trend = { icon: '↔', text: 'คงที่', color: 'var(--text-secondary)' };
-        if (latestHeight > olderHeight) trend = { icon: '↑', text: 'เพิ่มขึ้น', color: 'var(--normal-color)' };
-        else if (latestHeight < olderHeight) trend = { icon: '↓', text: 'ลดลง', color: 'var(--high-color)' };
         const toPercent = (value) => ((value / config.maxHeight) * 100).toFixed(1);
-        elements.avgHeight.innerHTML = `${avgHeight.toFixed(2)} m <span class="percent">(${toPercent(avgHeight)}%)</span>`;
-        elements.maxHeightInsight.innerHTML = `${maxHeight.toFixed(2)} m <span class="percent">(${toPercent(maxHeight)}%)</span>`;
-        elements.minHeightInsight.innerHTML = `${minHeight.toFixed(2)} m <span class="percent">(${toPercent(minHeight)}%)</span>`;
-        elements.currentTrend.innerHTML = `<span style="color: ${trend.color};">${trend.icon} ${trend.text}</span>`;
+
+        // --- แสดงผล ---
+        // 1. แนวโน้ม
+        document.getElementById('insightTrend').innerHTML = 
+            `<span style="color: ${trendColor}; font-size: 1.1em;">${trendIcon} ${trendText}</span>`;
+        
+        // 2. อัตรา
+        const sign = rateOfRise > 0 ? '+' : '';
+        document.getElementById('insightRate').innerHTML = 
+            `${sign}${rateOfRise.toFixed(2)} <span style="font-size:0.8em; color:#666;">m/ชม.</span>`;
+        
+        // 3. ระยะเวลา
+        const floodColor = floodMs > 0 ? 'var(--high-color)' : 'var(--text-primary)';
+        document.getElementById('insightFlood').innerHTML = `<span style="color: ${floodColor}">${formatDuration(floodMs)}</span>`;
+
+        const droughtColor = droughtMs > 0 ? 'var(--low-color)' : 'var(--text-primary)';
+        document.getElementById('insightDrought').innerHTML = `<span style="color: ${droughtColor}">${formatDuration(droughtMs)}</span>`;
+
+        // 4. Max/Min
+        document.getElementById('insightMax').innerHTML = `${maxHeight.toFixed(2)} m <span class="percent" style="font-size:0.7em; color:#999;">(${toPercent(maxHeight)}%)</span>`;
+        document.getElementById('insightMin').innerHTML = `${minHeight.toFixed(2)} m <span class="percent" style="font-size:0.7em; color:#999;">(${toPercent(minHeight)}%)</span>`;
+
         elements.insightsModal.style.display = 'block';
     }
+    
     function hideInsightsPopup() { elements.insightsModal.style.display = 'none'; }
 
     init(); 
