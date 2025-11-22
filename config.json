@@ -1,0 +1,29 @@
+{
+    "tank1": {
+        "name": "บ่อหน้าตึกโทร",
+        "page": "tank1.html",
+        "sheetUrl": "https://docs.google.com/spreadsheets/d/1eQwqYfsLff8z5hsFMB2_cghDQ60zi8NAokpKibCP6S8/gviz/tq?",
+        "dataSheetName": "Sheet1",
+        "location": "หน้าตึกภาควิชาวิศวกรรมโทรคมนาคม",
+        "latitude": 13.727301,
+        "longitude": 100.776734,
+        "maxHeight": 2,
+        "floodedThreshold": 1.5,
+        "droughtThreshold": 0.5,
+        "useDynamicConfig": false
+    },
+    "tank2": {
+        "name": "บ่อโรงอาหาร A",
+        "page": "tank2.html",
+        "sheetUrl": "https://docs.google.com/spreadsheets/d/1fKmavCgosbDlrlbrkJjFRjR0GKZnPpTo8DAPlhPI5sk/gviz/tq?",
+        "dataSheetName": "DATA",
+        "settingSheetName": "SETTING",
+        "location": "โรงอาหาร A คณะวิศวกรรมศาสตร์",
+        "latitude": 13.726563,
+        "longitude": 100.776414,
+        "maxHeight": 3,
+        "floodedThreshold": 2.5,
+        "droughtThreshold": 0.5,
+        "useDynamicConfig": true
+    }
+}

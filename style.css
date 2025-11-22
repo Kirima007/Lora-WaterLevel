@@ -379,3 +379,53 @@ tbody tr:last-child td { border-bottom: none; }
 #line-overlay line.visible {
     opacity: 0.9; /* Visible when the 'visible' class is added */
 }
+
+.skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s infinite;
+    color: transparent !important; /* ซ่อนตัวหนังสือ */
+    border-radius: 4px;
+    pointer-events: none;
+}
+
+@keyframes skeleton-loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* คลาสสำหรับบังคับขนาดตอนโหลด เพื่อให้ Skeleton สวยงาม */
+.skeleton-text {
+    display: inline-block;
+    min-width: 60px;
+    min-height: 1em;
+}
+
+/* 2. Offline/Error Banner (แถบแจ้งเตือนเมื่อดึงข้อมูลไม่ได้) */
+#connectionStatus {
+    display: none; /* ซ่อนไว้ก่อน */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 12px;
+    text-align: center;
+    color: white;
+    font-weight: bold;
+    z-index: 2000;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    animation: slideDown 0.3s ease-out;
+}
+
+.status-offline {
+    background-color: #dc3545; /* สีแดง */
+}
+
+.status-reconnecting {
+    background-color: #f58220; /* สีส้ม */
+}
+
+@keyframes slideDown {
+    from { transform: translateY(-100%); }
+    to { transform: translateY(0); }
+}
