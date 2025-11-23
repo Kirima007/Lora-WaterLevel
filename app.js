@@ -298,10 +298,12 @@ document.addEventListener('DOMContentLoaded', () => {
     create(data, floodedThreshold, droughtThreshold) {
         this.destroy();
         const style = getComputedStyle(document.documentElement);
-        // ดึงสีมาใช้ ถ้าไม่มีใช้ค่า Default สวยๆ
         const cHigh = style.getPropertyValue('--high-color').trim() || '#dc3545';
         const cLow = style.getPropertyValue('--low-color').trim() || '#ffc107';
         const cAccent = style.getPropertyValue('--accent-color').trim() || '#F58220';
+
+        // เช็คว่าเป็นหน้าจอมือถือหรือไม่
+        const isMobile = window.innerWidth <= 768;
 
         const options = {
             chart: {
@@ -309,9 +311,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 height: '100%',
                 fontFamily: 'Prompt, sans-serif',
                 background: 'transparent',
-                toolbar: { show: true, tools: { download: false } },
-                zoom: { enabled: true },
-                animations: { enabled: false },
+                toolbar: { 
+                    show: !isMobile, // ซ่อน Toolbar บนมือถือเพื่อความสะอาดตา
+                    tools: { download: false } 
+                },
+                zoom: { 
+                    enabled: !isMobile // *** สำคัญ: ปิด Zoom บนมือถือเพื่อให้ Scroll หน้าเว็บได้ไม่ติดขัด
+                },
+                animations: { enabled: false }, // ปิด Animation บนมือถือเพื่อ Performance
                 dropShadow: { enabled: true, top: 4, left: 0, blur: 4, opacity: 0.15 }
             },
             colors: [cAccent],
@@ -319,20 +326,30 @@ document.addEventListener('DOMContentLoaded', () => {
             dataLabels: { enabled: false },
             stroke: { curve: 'smooth', width: 2.5, lineCap: 'round' },
             
-            // กราฟสีขาวไล่เฉด
             fill: {
                 type: "gradient",
                 gradient: { shade: 'light', shadeIntensity: 0.5, opacityFrom: 0.7, opacityTo: 0.2, stops: [0, 90, 100] }
             },
             
-            markers: { size: 0, strokeColors: '#fff', strokeWidth: 2, hover: { size: 6, sizeOffset: 3 } },
+            // ลดขนาดจุด (Marker) บนมือถือ
+            markers: { 
+                size: 0, 
+                strokeColors: '#fff', 
+                strokeWidth: 2, 
+                hover: { size: isMobile ? 0 : 6, sizeOffset: 3 } 
+            },
 
             tooltip: {
                 theme: 'light',
+                // บนมือถือ Tooltip จะติดตามนิ้วได้ดีขึ้นถ้า fixed
+                fixed: {
+                    enabled: false,
+                    position: 'topRight'
+                },
                 x: {
                     formatter: function(val) {
                         return new Date(val).toLocaleString('th-TH', {
-                            day: 'numeric', month: 'short', year: '2-digit',
+                            day: 'numeric', month: 'short',
                             hour: '2-digit', minute: '2-digit'
                         });
                     }
@@ -346,64 +363,52 @@ document.addEventListener('DOMContentLoaded', () => {
                 axisBorder: { show: false }, 
                 axisTicks: { show: false },
                 crosshairs: { show: true, stroke: { color: '#b6b6b6', dashArray: 3 } },
-                tickAmount: 6,
+                tickAmount: isMobile ? 3 : 6, // ลดจำนวนขีดวันที่บนแกน X สำหรับมือถือ
                 labels: {
                     datetimeUTC: false,
                     style: { colors: '#999', fontFamily: 'Prompt, sans-serif' },
                     datetimeFormatter: {
                         year: 'yyyy',
                         month: 'MM/yyyy',
-                        day: 'dd/MM/yyyy',
+                        day: 'dd/MM',     // ย่อรูปแบบวันที่บนมือถือ
                         hour: 'HH:mm'
                     }
                 }
             },
 
             yaxis: {
-                min: 0, max: config.maxHeight, tickAmount: 5,
-                labels: { style: { colors: '#999', fontFamily: 'Prompt, sans-serif' }, formatter: val => val.toFixed(1) }
+                min: 0, max: config.maxHeight, 
+                tickAmount: 5,
+                labels: { 
+                    style: { colors: '#999', fontFamily: 'Prompt, sans-serif' }, 
+                    formatter: val => val.toFixed(1) 
+                }
             },
-            grid: { borderColor: 'rgba(0,0,0,0.06)', strokeDashArray: 4, padding: { right: 20 } },
+            grid: { 
+                borderColor: 'rgba(0,0,0,0.06)', 
+                strokeDashArray: 4, 
+                padding: { right: isMobile ? 0 : 20, left: 10 } // ปรับ Padding
+            },
 
-            // --- Annotations: ปรับดีไซน์ป้ายใหม่ตรงนี้ ---
             annotations: {
-                yaxis: [
-                    // โซนน้ำท่วม
+                // ... (ใช้ Code Annotation เดิมของคุณได้เลยครับ ไม่ต้องแก้) ...
+                 yaxis: [
                     { y: floodedThreshold, y2: config.maxHeight, fillColor: cHigh, opacity: 0.08 },
                     {
                         y: floodedThreshold, borderColor: cHigh,
                         label: {
                             text: 'น้ำท่วม',
-                            position: 'right', textAnchor: 'end', 
-                            offsetX: 0, 
-                            offsetY: -10, // ขยับขึ้นเหนือเส้น
-                            borderRadius: 4, // มนเล็กน้อยแบบ Modern Tag
-                            borderColor: cHigh, // สีขอบเดียวกับพื้นหลัง
-                            style: {
-                                color: '#fff', // ตัวหนังสือขาว
-                                background: cHigh, // พื้นหลังแดงทึบ
-                                fontSize: '12px', fontWeight: 600, fontFamily: 'Prompt, sans-serif',
-                                padding: { left: 8, right: 8, top: 2, bottom: 2 }
-                            }
+                            position: 'right', textAnchor: 'end', offsetX: 0, offsetY: -10, borderRadius: 4, borderColor: cHigh,
+                            style: { color: '#fff', background: cHigh, fontSize: '12px', fontWeight: 600, fontFamily: 'Prompt, sans-serif', padding: { left: 8, right: 8, top: 2, bottom: 2 } }
                         }
                     },
-                    // โซนน้ำแห้ง
                     { y: 0, y2: droughtThreshold, fillColor: cLow, opacity: 0.12 },
                     {
                         y: droughtThreshold, borderColor: cLow,
                         label: {
                             text: 'น้ำแห้ง',
-                            position: 'right', textAnchor: 'end', 
-                            offsetX: 0, 
-                            offsetY: 10, // ขยับลงใต้เส้น
-                            borderRadius: 4,
-                            borderColor: cLow,
-                            style: {
-                                color: '#333', // ตัวหนังสือสีเข้ม (อ่านง่ายบนพื้นเหลือง)
-                                background: cLow, // พื้นหลังเหลืองทึบ
-                                fontSize: '12px', fontWeight: 600, fontFamily: 'Prompt, sans-serif',
-                                padding: { left: 8, right: 8, top: 2, bottom: 2 }
-                            }
+                            position: 'right', textAnchor: 'end', offsetX: 0, offsetY: 10, borderRadius: 4, borderColor: cLow,
+                            style: { color: '#333', background: cLow, fontSize: '12px', fontWeight: 600, fontFamily: 'Prompt, sans-serif', padding: { left: 8, right: 8, top: 2, bottom: 2 } }
                         }
                     }
                 ]

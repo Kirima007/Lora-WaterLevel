@@ -914,3 +914,106 @@ tbody tr:last-child td { border-bottom: none; }
         .insight-item { grid-column: span 1 !important; }
     }
 }
+/* ============================================
+   RESPONSIVE DASHBOARD (MOBILE & TABLET)
+   Target: Tank Pages (tank1.html, tank2.html)
+   ============================================ */
+
+/* Tablet & Mobile (หน้าจอเล็กกว่า 1024px) */
+/* ============================================
+   RESPONSIVE & BEAUTY FIX (FINAL)
+   Target: Tank Pages (Mobile & Tablet)
+   ============================================ */
+
+@media (max-width: 1024px) {
+    
+    /* 1. จัด Container หลัก: ลดขอบลงเพื่อให้เนื้อหาเด่นขึ้น */
+    .dashboard-container {
+        padding: 10px; 
+        width: 100%;
+        overflow-x: hidden; /* ป้องกันแกน X ทะลุ */
+    }
+
+    /* 2. แก้ Layout: เปลี่ยนจากซ้าย-ขวา เป็น บน-ล่าง แบบเต็มขอบ */
+    .main-content {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        gap: 15px; /* ระยะห่างระหว่างกล่อง Info กับ Chart */
+    }
+
+    /* สำคัญ: บังคับให้ทั้ง 2 ส่วนกว้างเต็มจอ ไม่เยื้อง */
+    .info-column, 
+    .main-column {
+        width: 100%;
+        min-width: 0; /* แก้บั๊ก Flexbox ดันทะลุในบาง Browser */
+    }
+
+    /* 3. ปรับ Widget ให้ดูดีขึ้นบนจอเล็ก */
+    .widget {
+        padding: 20px 15px; /* ลด Padding ด้านข้างลงนิดนึง */
+        margin-bottom: 0;   /* ให้ gap ของ container จัดการระยะห่างแทน */
+    }
+
+    /* 4. Header: จัดให้อยู่กึ่งกลาง หรือ ชิดซ้ายสวยๆ */
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+        padding: 20px;
+    }
+    
+    .header-right {
+        width: 100%;
+        display: flex;
+        justify-content: flex-end; /* ไอคอนชีทอยู่ขวาสุด */
+        border-top: 1px solid rgba(255,255,255,0.2); /* เส้นแบ่งจางๆ */
+        padding-top: 10px;
+    }
+
+    /* 5. กล่องสถานะ (Level/Percent): จัดให้อยู่คู่กันสวยๆ ไม่เบี้ยว */
+    .status-widget .status-metrics {
+        display: grid;
+        grid-template-columns: 1fr 1fr; /* แบ่งครึ่ง 50-50 เป๊ะ */
+        gap: 15px;
+        text-align: center;
+    }
+
+    .metric-item {
+        border-bottom: none; /* ลบเส้นแบ่งแนวนอนเดิม */
+        padding: 10px;
+        background-color: #f8f9fa; /* ใส่พื้นหลังจางๆ ให้ดูเป็นสัดส่วน */
+        border-radius: 8px;
+    }
+
+    .metric-value {
+        font-size: 1.6em; /* ลดขนาดตัวเลขลงหน่อยไม่ให้ล้น */
+    }
+
+    /* 6. Chart: ให้ความสูงพอดีๆ */
+    #waterChart {
+        min-height: 320px;
+    }
+    
+    /* 7. ปุ่มกด: เรียงแนวนอนคู่กัน (ถ้าจอพอ) หรือตั้ง (ถ้าจอเล็กมาก) */
+    .action-buttons-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+}
+
+/* มือถือจอเล็กมาก (iPhone SE, Small Android) */
+@media (max-width: 480px) {
+    .status-widget .status-metrics {
+        grid-template-columns: 1fr; /* เรียงตั้ง */
+    }
+    
+    .action-buttons-container {
+        grid-template-columns: 1fr; /* ปุ่มเรียงตั้ง */
+    }
+    
+    .header h1 {
+        font-size: 1.4rem;
+    }
+}
