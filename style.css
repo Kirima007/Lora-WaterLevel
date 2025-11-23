@@ -701,3 +701,4 @@ tbody tr:last-child td { border-bottom: none; }
     50% { opacity: 1; transform: scale(1.1); }
     100% { opacity: 0.6; transform: scale(0.95); }
 }
+

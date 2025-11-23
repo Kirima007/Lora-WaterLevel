@@ -5,13 +5,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const overviewGrid = document.getElementById('overviewGrid');
     let map;
     const markers = {};
-    let svgOverlay; 
-    const lines = {};   
+    // ลบตัวแปร svgOverlay และ lines ออก
+
+    // --- กำหนดค่าไอคอนหมุด (Custom Pin) ---
+    const customPinIcon = L.icon({
+        iconUrl: 'Pin.png',      
+        iconSize: [40, 40],      
+        iconAnchor: [20, 40],    
+        popupAnchor: [0, -45],   
+        shadowUrl: null          
+    });
 
     // --- INITIALIZATION ---
     async function init() {
         initMap(); 
-        initSvgOverlay();
+        // ลบ initSvgOverlay() ออก
         setupSidebarToggle(); 
         
         const statusBanner = document.createElement('div');
@@ -23,9 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         window.addEventListener('offline', () => showError('ขาดการเชื่อมต่ออินเทอร์เน็ต'));
 
-        map.on('zoomend moveend', updateLines);
-        window.addEventListener('resize', updateLines);
-        overviewGrid.addEventListener('scroll', updateLines);
+        // ลบ Event Listener ที่คอย updateLines ออกทั้งหมด
 
         try {
             const response = await fetch('config.json');
@@ -44,10 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function initMap() {
-        // 1. ปิด Zoom Control ตัวเดิม (ที่อยู่ซ้ายบน)
         map = L.map('map', { zoomControl: false }).setView([13.727, 100.776], 17);
-        
-        // 2. สร้าง Zoom Control ใหม่ ให้ไปอยู่ "ขวาบน" (topright) แทน
         L.control.zoom({ position: 'topright' }).addTo(map);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -55,11 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }).addTo(map);
     }
 
-    function initSvgOverlay() {
-        svgOverlay = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        svgOverlay.id = 'line-overlay';
-        document.body.appendChild(svgOverlay);
-    }
+    // ลบฟังก์ชัน initSvgOverlay() ออก
 
     function setupSidebarToggle() {
         const toggleBtn = document.getElementById('sidebarToggle');
@@ -71,7 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
             container.classList.toggle('collapsed');
             setTimeout(() => {
                 map.invalidateSize();
-                updateLines();
+                // ลบ updateLines() ออก
             }, 350);
         });
     }
@@ -97,7 +96,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 </a>`;
             overviewGrid.innerHTML += cardHTML;
 
-            const marker = L.marker([config.latitude, config.longitude]).addTo(map);
+            // ใช้ customPinIcon
+            const marker = L.marker([config.latitude, config.longitude], { icon: customPinIcon }).addTo(map);
+            
             marker.bindPopup(createPopupHTML(config, null), {
                 className: 'custom-popup',
                 minWidth: 280
@@ -105,9 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             markers[tankId] = marker;
 
-            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            svgOverlay.appendChild(line);
-            lines[tankId] = line;
+            // ลบโค้ดส่วนสร้างเส้น (svg line) ออก
         }
     }
     
@@ -162,18 +161,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function highlightSidebarCard(tankId) {
-        // ลบโค้ดที่สั่งเปิด Sidebar ออก ตามที่ต้องการ
         const card = document.getElementById(`card-${tankId}`);
         if(card) {
             document.querySelectorAll('.overview-card').forEach(c => c.classList.remove('highlight'));
             card.classList.add('highlight');
             
-            // Scroll หา Card เฉพาะตอนที่ Sidebar เปิดอยู่เท่านั้น
             const container = document.querySelector('.overview-page-container');
             if (!container.classList.contains('collapsed')) {
                 card.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
-            updateLines();
+            // ลบ updateLines() ออก
         }
     }
 
@@ -192,7 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
         for (const tankId in TANK_CONFIG) {
             await fetchAndDisplayTankData(tankId, TANK_CONFIG[tankId]);
         }
-        updateLines();
+        // ลบ updateLines() ออก
     }
 
     async function fetchAndDisplayTankData(tankId, config) {
@@ -277,33 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
         banner.style.display = 'block';
     }
 
-    function updateLines() {
-        const mapContainer = document.getElementById('map');
-        if (!mapContainer) return;
-        const mapRect = mapContainer.getBoundingClientRect();
-        for (const tankId in TANK_CONFIG) {
-            const card = document.getElementById(`card-${tankId}`);
-            const marker = markers[tankId];
-            const line = lines[tankId];
-            if (!card || !marker || !line) continue;
-            // เช็คเพิ่ม: วาดเส้นเฉพาะตอนที่ sidebar ไม่ได้ปิด (collapsed) อยู่
-            if (card.classList.contains('highlight') && !document.querySelector('.overview-page-container').classList.contains('collapsed')) {
-                const cardRect = card.getBoundingClientRect();
-                const x1 = cardRect.right;
-                const y1 = cardRect.top + (cardRect.height / 2);
-                const markerPoint = map.latLngToContainerPoint(marker.getLatLng());
-                const x2 = mapRect.left + markerPoint.x;
-                const y2 = mapRect.top + markerPoint.y;
-                line.setAttribute('x1', x1);
-                line.setAttribute('y1', y1);
-                line.setAttribute('x2', x2);
-                line.setAttribute('y2', y2);
-                line.classList.add('visible');
-            } else {
-                line.classList.remove('visible');
-            }
-        }
-    }
+    // ลบฟังก์ชัน updateLines() ออก
 
     function parseGoogleDate(str) {
         const m = str.match(/Date\((\d+),(\d+),(\d+)(?:,(\d+),(\d+),(\d+))?\)/);

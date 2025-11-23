@@ -207,17 +207,39 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!data) return;
         const date = new Date(data.timestamp);
         elements.lastUpdated.textContent = `${date.toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' })}`;
+        
         const height = data.height;
-        const percentage = (height / config.maxHeight) * 100;
+        // คำนวณเปอร์เซ็นต์ (Limit ไว้ไม่ให้เกิน 0-100)
+        let percentage = (height / config.maxHeight) * 100;
+        percentage = Math.max(0, Math.min(100, percentage)); 
+
         elements.currentHeight.textContent = `${height.toFixed(2)} m`;
         elements.currentPercent.textContent = `${percentage.toFixed(1)} %`;
+
         const status = getStatus(height);
+        
+        // --- ส่วนที่เพิ่ม: อัปเดต Liquid Gauge ---
+        const waveElement = document.getElementById('waveElement');
+        if (waveElement) {
+            // คำนวณตำแหน่ง Top: 100% คือน้ำแห้ง, 0% คือน้ำเต็ม
+            // ต้องชดเชยค่าเล็กน้อยเพราะคลื่นมันหมุน
+            const topPos = 100 - percentage; 
+            waveElement.style.top = `${topPos}%`;
+
+            // เปลี่ยนสีน้ำตามสถานะ
+            waveElement.className = 'liquid-wave'; // รีเซ็ตคลาสเดิม
+            waveElement.classList.add(`status-${status.className}`); // ใส่สีตามสถานะ (high/normal/low)
+        }
+        // ------------------------------------
+
         elements.alertBox.className = 'status-alert'; 
         elements.alertBox.classList.add(`alert-${status.className}`);
         const statusEmoji = status.label === "น้ำท่วม" ? "🌊" : status.label === "น้ำแห้ง" ? "☀️" : "💧";
         elements.alertBox.innerHTML = `${statusEmoji} ${status.label}`;
+        
         elements.currentHeight.style.color = status.color;
-        elements.currentPercent.style.color = status.color;
+        // ตัวเลข % ในวงกลม ไม่ต้องเปลี่ยนสีตาม status แล้ว เพราะสีน้ำเปลี่ยนแทน
+        // elements.currentPercent.style.color = status.color; 
     }
     
     function parseGoogleDate(str) {
