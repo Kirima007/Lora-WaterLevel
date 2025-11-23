@@ -24,6 +24,6 @@
         "maxHeight": 3,
         "floodedThreshold": 0.7,
         "droughtThreshold": 0.5,
-        "useDynamicConfig": false
+        "useDynamicConfig": true
     }
 }
