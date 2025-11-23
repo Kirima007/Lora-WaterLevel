@@ -5,21 +5,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const overviewGrid = document.getElementById('overviewGrid');
     let map;
     const markers = {};
-    // ลบตัวแปร svgOverlay และ lines ออก
-
-    // --- กำหนดค่าไอคอนหมุด (Custom Pin) ---
-    const customPinIcon = L.icon({
-        iconUrl: 'Pin.png',      
-        iconSize: [40, 40],      
-        iconAnchor: [20, 40],    
-        popupAnchor: [0, -45],   
-        shadowUrl: null          
-    });
 
     // --- INITIALIZATION ---
     async function init() {
         initMap(); 
-        // ลบ initSvgOverlay() ออก
         setupSidebarToggle(); 
         
         const statusBanner = document.createElement('div');
@@ -31,14 +20,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         window.addEventListener('offline', () => showError('ขาดการเชื่อมต่ออินเทอร์เน็ต'));
 
-        // ลบ Event Listener ที่คอย updateLines ออกทั้งหมด
-
         try {
             const response = await fetch('config.json');
             if (!response.ok) throw new Error('Failed to load config.json');
             TANK_CONFIG = await response.json();
 
-            createAllTankCards();
+            createAllTankCards(); // สร้างการ์ดและหมุด
             setupCardInteractions();
 
             fetchAllTankData();
@@ -50,9 +37,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function initMap() {
+        // ปรับ Zoom ให้เห็นภาพรวมชัดขึ้น
         map = L.map('map', { zoomControl: false }).setView([13.727, 100.776], 17);
-        L.control.zoom({ position: 'topright' }).addTo(map);
+        
+        // ย้าย Zoom Control ไปขวาล่าง เพื่อไม่ให้บัง Sidebar
+        L.control.zoom({ position: 'bottomright' }).addTo(map);
 
+        // ใช้แผนที่โทนสีสว่าง หรือ Dark Mode ก็ได้ (ในที่นี้ใช้แบบเดิม)
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
@@ -64,21 +55,32 @@ document.addEventListener('DOMContentLoaded', () => {
         const toggleBtn = document.getElementById('sidebarToggle');
         const container = document.querySelector('.overview-page-container');
         
-        if (!toggleBtn) return;
+        // สำหรับ Desktop (ปุ่มลูกศร)
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                container.classList.toggle('collapsed');
+            });
+        }
 
-        toggleBtn.addEventListener('click', () => {
-            container.classList.toggle('collapsed');
-            setTimeout(() => {
-                map.invalidateSize();
-                // ลบ updateLines() ออก
-            }, 350);
-        });
+        // --- [แก้ตรงนี้] สำหรับ Mobile/iPad (กดที่หัวถาด) ---
+        const sidebarHeader = document.querySelector('.sidebar .header');
+        if (sidebarHeader) {
+            sidebarHeader.addEventListener('click', () => {
+                // ขยายเงื่อนไขให้ครอบคลุม iPad (เปลี่ยนจาก 768 เป็น 1180)
+                if (window.innerWidth <= 1180) {
+                    container.classList.toggle('collapsed');
+                }
+            });
+        }
     }
 
     function createAllTankCards() {
         overviewGrid.innerHTML = ''; 
         for (const tankId in TANK_CONFIG) {
             const config = TANK_CONFIG[tankId];
+            
+            // 1. สร้าง Card ใน Sidebar (เหมือนเดิม)
             const cardHTML = `
                 <a href="${config.page}" class="overview-card" id="card-${tankId}" data-tank-id="${tankId}">
                     <div class="overview-card-header">
@@ -91,23 +93,39 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                     <div class="overview-card-footer">
                         <p>อัปเดตล่าสุด: <span id="updated-${tankId}" class="skeleton skeleton-text">-</span></p>
-                        <span>คลิกเพื่อดูรายละเอียด →</span>
                     </div>
                 </a>`;
             overviewGrid.innerHTML += cardHTML;
 
-            // ใช้ customPinIcon
-            const marker = L.marker([config.latitude, config.longitude], { icon: customPinIcon }).addTo(map);
+            // 2. [แก้] สร้าง Marker เป็น Pulsing Dot (DivIcon)
+            // เริ่มต้นเป็นสีเทา (Loading) หรือสีปกติไปก่อน
+            const pulsingIcon = createPulsingIcon('normal'); 
+
+            const marker = L.marker([config.latitude, config.longitude], { icon: pulsingIcon }).addTo(map);
             
+            // Popup (เหมือนเดิม)
             marker.bindPopup(createPopupHTML(config, null), {
                 className: 'custom-popup',
-                minWidth: 280
+                minWidth: 280,
+                offset: [0, -10] // ขยับ Popup ขึ้นนิดหน่อยให้พ้นจุด
             });
 
             markers[tankId] = marker;
-
-            // ลบโค้ดส่วนสร้างเส้น (svg line) ออก
         }
+    }
+
+    function createPulsingIcon(statusClass) {
+        return L.divIcon({
+            className: 'custom-div-icon', // คลาสเปล่าๆ เพื่อลบ style default ของ Leaflet
+            html: `
+                <div class="pulsing-marker marker-${statusClass}">
+                    <div class="ring"></div>
+                    <div class="dot"></div>
+                </div>
+            `,
+            iconSize: [40, 40],
+            iconAnchor: [20, 20] // จุดยึดอยู่ตรงกลางเป๊ะ
+        });
     }
     
     function createPopupHTML(config, data) {
@@ -247,6 +265,10 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById(`updated-${tankId}`).textContent = date.toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' });
 
         if (markers[tankId]) {
+            const newIcon = createPulsingIcon(status.className); // ส่ง class: high, low, normal
+            markers[tankId].setIcon(newIcon);
+            
+            // อัปเดต Popup content
             const popupContent = createPopupHTML(config, { height, percentage, status, statusEmoji });
             markers[tankId].setPopupContent(popupContent);
         }

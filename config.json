@@ -22,8 +22,8 @@
         "latitude": 13.726563,
         "longitude": 100.776414,
         "maxHeight": 3,
-        "floodedThreshold": 2.5,
+        "floodedThreshold": 0.7,
         "droughtThreshold": 0.5,
-        "useDynamicConfig": true
+        "useDynamicConfig": false
     }
 }

@@ -51,43 +51,43 @@ h1, h2, h3 {
     overflow: hidden;
 }
 
+/* Sidebar สำหรับ Desktop */
 .sidebar {
-    width: var(--sidebar-width);
-    flex-shrink: 0;
-    background-color: var(--bg-color);
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    bottom: 20px; /* เว้นขอบล่าง */
+    width: 400px;
+    z-index: 1000; /* อยู่เหนือ Map */
+    background-color: rgba(255, 255, 255, 0.9); /* โปร่งแสงนิดหน่อย */
+    backdrop-filter: blur(10px); /* เอฟเฟกต์กระจกเบลอ (Glassmorphism) */
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    overflow: hidden;
+    
+    /* Transition สำหรับการพับเก็บ */
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     flex-direction: column;
-    height: 100%;
-    box-shadow: 2px 0 10px rgba(0,0,0,0.05);
-    z-index: 10;
     
-    /* Animation Properties */
-    transition: width var(--animation-duration) var(--animation-ease), transform var(--animation-duration) var(--animation-ease);
-    white-space: nowrap; /* ป้องกันข้อความแตกบรรทัดตอนย่อ */
+    /* Default State for Desktop: Show at normal position */
+    transform: translateX(0);
 }
 
 /* --- Sidebar Toggle Button Styles --- */
 .sidebar-toggle {
     position: absolute;
-    top: 20px; /* ตำแหน่งแนวตั้ง */
-    left: var(--sidebar-width); /* เริ่มต้นติดกับขอบ Sidebar */
-    
-    width: 24px;
-    height: 50px;
-    background-color: var(--widget-bg-color);
-    border: 1px solid var(--border-color);
-    border-left: none; /* ลบเส้นขอบซ้ายให้ดูเชื่อมกับ Sidebar */
-    border-radius: 0 8px 8px 0; /* โค้งเฉพาะด้านขวา */
-    cursor: pointer;
-    z-index: 1000; /* อยู่เหนือแผนที่ */
-    
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-secondary);
-    box-shadow: 4px 2px 5px rgba(0,0,0,0.05);
-    
-    transition: left var(--animation-duration) var(--animation-ease), background-color 0.2s;
+    top: 20px;
+    left: 430px; /* วางข้างๆ Sidebar เดิม */
+    z-index: 1001;
+    background: white;
+    border-radius: 50%; /* กลม */
+    width: 40px;
+    height: 40px;
+    border: none;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s;
 }
 
 .sidebar-toggle:hover {
@@ -99,15 +99,14 @@ h1, h2, h3 {
     transition: transform var(--animation-duration) var(--animation-ease);
 }
 
-/* --- Collapsed State (สถานะเมื่อปิด Sidebar) --- */
+/* --- Collapsed State (สถานะเมื่อปิด Sidebar บน Desktop) --- */
 .overview-page-container.collapsed .sidebar {
-    width: 0;
-    border-right: none;
-    overflow: hidden; /* ซ่อนเนื้อหาข้างใน */
+    transform: translateX(-420px); /* เลื่อนพ้นจอไปทางซ้าย */
+    width: 400px; /* คงความกว้างไว้ ไม่บีบ */
 }
 
 .overview-page-container.collapsed .sidebar-toggle {
-    left: 0; /* เลื่อนปุ่มกลับไปชิดซ้ายจอ */
+    left: 20px;
 }
 
 .overview-page-container.collapsed .sidebar-toggle svg {
@@ -117,11 +116,10 @@ h1, h2, h3 {
 
 /* --- Sidebar Components --- */
 .sidebar .header {
-    background-color: var(--widget-bg-color);
-    border-bottom: 1px solid var(--border-color);
-    flex-shrink: 0;
-    padding: 1rem 1.5rem;
+    background: transparent; /* พื้นหลังใสเพราะ Sidebar มีสีแล้ว */
+    border-bottom: 1px solid rgba(0,0,0,0.05);
 }
+
 .sidebar .header h1 {
     font-size: 1.5rem;
     color: var(--text-primary);
@@ -143,6 +141,60 @@ h1, h2, h3 {
     height: 100%;
     z-index: 5;
     transition: width var(--animation-duration) var(--animation-ease); /* Smooth resize */
+}
+
+.pulsing-marker {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.pulsing-marker .dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background-color: #fff;
+    border: 2px solid #fff;
+    z-index: 2;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+/* วงแหวนกระพริบ (Ring) */
+.pulsing-marker .ring {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    opacity: 0;
+    z-index: 1;
+    animation: pulse-ring 2s infinite; /* Default Slow */
+}
+
+@keyframes pulse-ring {
+    0% { transform: scale(0.3); opacity: 0.8; }
+    80% { transform: scale(1); opacity: 0; }
+    100% { transform: scale(1); opacity: 0; }
+}
+
+.marker-normal .dot { background-color: #28a745; }
+.marker-normal .ring { 
+    background-color: rgba(40, 167, 69, 0.5); 
+    animation-duration: 2.5s; /* ช้ามาก */
+}
+
+/* 2. น้ำท่วม (แดง - เร็ว) */
+.marker-high .dot { background-color: #dc3545; }
+.marker-high .ring { 
+    background-color: rgba(220, 53, 69, 0.6); 
+    animation-duration: 0.8s; /* เร็ว! เหมือนไซเรน */
+}
+
+/* 3. น้ำแล้ง (เหลือง - ปานกลาง) */
+.marker-low .dot { background-color: #ffc107; }
+.marker-low .ring { 
+    background-color: rgba(255, 193, 7, 0.6); 
+    animation-duration: 2s;
 }
 
 .overview-grid {
@@ -480,11 +532,9 @@ td { padding: 12px 15px; border-bottom: 1px solid var(--border-color); }
 tbody tr:hover { background-color: var(--accent-color-light); }
 tbody tr:last-child td { border-bottom: none; }
 .last-updated {
-    /* ของเดิมเป็น text-align: right; ให้ลบ หรือเปลี่ยนเป็น left */
     text-align: left; 
     font-size: 0.9em;
     color: var(--text-secondary);
-    /* margin-top: 15px; อันนี้ลบออกได้เพราะเราใส่ใน HTML แล้ว หรือจะคงไว้ก็ได้ */
 }
 
 .action-buttons-container { display: flex; flex-direction: column; gap: 12px; }
@@ -499,31 +549,6 @@ tbody tr:last-child td { border-bottom: none; }
 }
 .action-btn:hover { opacity: 0.9; transform: translateY(-2px); }
 
-/* --- Responsive Design --- */
-@media (max-width: 1024px) {
-    /* Overview Page Responsive */
-    .overview-page-container { flex-direction: column; }
-    .sidebar { width: 100%; height: 50vh; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-    #map { height: 50vh; }
-    .sidebar .header h1 { font-size: 1.25rem; }
-    
-    /* ซ่อนปุ่ม Toggle บนมือถือ เพราะใช้ Layout บน-ล่าง */
-    .sidebar-toggle { display: none; }
-
-    /* Detail Page Responsive */
-    .main-content {
-        grid-template-columns: 1fr;
-        grid-template-areas: "info" "main";
-    }
-}
-
-@media (max-width: 768px) {
-    .sidebar { height: 45vh; }
-    #map { height: 55vh; }
-    .dashboard-container { padding: 16px; }
-    .header { flex-direction: column; gap: 15px; }
-    .status-widget .status-metrics { flex-direction: column; }
-}
 
 /* --- Insights Modal Styles --- */
 .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); animation: fadeIn 0.3s; }
@@ -710,10 +735,8 @@ tbody tr:last-child td { border-bottom: none; }
 
 /* =========================================
    ส่วนเสริมสำหรับตาราง (Table Widget Update)
-   ก๊อปปี้ไปวางต่อท้ายไฟล์ style.css ได้เลย
    ========================================= */
 
-/* ปรับระยะห่างตารางให้ดูโปร่งขึ้น */
 .table-widget table {
     border-collapse: separate; 
     border-spacing: 0;
@@ -722,42 +745,35 @@ tbody tr:last-child td { border-bottom: none; }
 .table-widget th {
     background-color: #f8f9fa;
     color: var(--text-secondary);
-    font-family: 'Prompt', sans-serif; /* เปลี่ยนฟอนต์ */
+    font-family: 'Prompt', sans-serif;
     font-weight: 600;
-    font-size: 0.8rem; /* ลดขนาดฟอนต์หัวตาราง */
+    font-size: 0.8rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    
-    /* --- จุดที่ทำให้ Compact --- */
-    padding: 8px 12px; /* ลดจาก 16px เหลือ 8px */
+    padding: 8px 12px;
     border-bottom: 2px solid var(--border-color);
 }
 
 .table-widget td {
-    /* --- จุดที่ทำให้ Compact --- */
-    padding: 6px 12px; /* ลดจาก 14px เหลือ 6px */
-    
+    padding: 6px 12px;
     border-bottom: 1px solid #f0f0f0;
     vertical-align: middle;
-    font-size: 0.9rem; /* ลดขนาดตัวอักษรข้อมูลลงนิดหน่อย */
+    font-size: 0.9rem;
 }
 
-/* ปรับป้ายสถานะในตารางให้เล็กลงด้วย */
 .table-widget .status-badge {
-    padding: 1px 8px; /* ลด padding ป้าย */
-    min-width: 60px;  /* ลดความกว้างขั้นต่ำ */
-    font-size: 0.75rem; /* ตัวหนังสือในป้ายเล็กลง */
-    border-radius: 4px; /* ปรับให้เหลี่ยมขึ้นนิดหน่อยเพื่อให้ดู Clean */
+    padding: 1px 8px;
+    min-width: 60px;
+    font-size: 0.75rem;
+    border-radius: 4px;
 }
 
-/* ปรับความสูงของกล่องตารางให้เหมาะสมกับแบบ Compact */
 .table-container { 
     overflow-y: auto; 
-    max-height: 250px; /* ปรับความสูงตามต้องการ */
+    max-height: 250px;
     width: 100%; 
 }
 
-/* ทำให้ตัวเลขเรียงหลักตรงกัน (Tabular Nums) */
 .num-cell {
     font-variant-numeric: tabular-nums;
     font-family: 'Prompt', sans-serif;
@@ -774,30 +790,28 @@ tbody tr:last-child td { border-bottom: none; }
     border-radius: 20px;
     font-size: 0.8rem;
     font-weight: 700;
-    min-width: 85px; /* กำหนดความกว้างขั้นต่ำให้เท่ากันสวยงาม */
+    min-width: 85px;
     box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
-/* สีพื้นหลังแบบพาสเทล + ตัวหนังสือเข้ม (อ่านง่ายกว่าเดิม) */
 .status-badge.high { 
     background-color: #fde8e8; 
-    color: #c53030; /* แดงเข้ม */
+    color: #c53030;
     border: 1px solid #fbd5d5;
 }
 
 .status-badge.normal { 
     background-color: #def7ec; 
-    color: #03543f; /* เขียวเข้ม */
+    color: #03543f;
     border: 1px solid #bcf0da;
 }
 
 .status-badge.low { 
     background-color: #fdf6b2; 
-    color: #723b13; /* เหลืองเข้ม/น้ำตาล */
+    color: #723b13;
     border: 1px solid #fce96a;
 }
 
-/* --- ลูกศรบอกแนวโน้ม (Trend Arrow) --- */
 .trend-arrow {
     display: inline-block;
     margin-left: 8px;
@@ -807,3 +821,96 @@ tbody tr:last-child td { border-bottom: none; }
 .trend-up { color: var(--high-color); transform: rotate(-45deg); display: inline-block; }
 .trend-down { color: var(--normal-color); transform: rotate(45deg); display: inline-block; }
 .trend-steady { color: #ccc; font-weight: normal; }
+
+
+/* ============================================
+   MOBILE & TABLET RESPONSIVE FIXES (Final Version)
+   แก้ปัญหาเยื้อง + iPad Logic + Mobile Bottom Sheet
+   ============================================ */
+
+@media (max-width: 1180px) {
+
+    /* 1. Reset Sidebar Style เพื่อให้เป็น Bottom Sheet */
+    .sidebar {
+        position: fixed; 
+        top: auto; 
+        left: 0; 
+        right: 0; 
+        bottom: 0;
+        
+        width: 100%; 
+        height: 60vh; 
+        
+        border-radius: 20px 20px 0 0; 
+        z-index: 2000;
+        box-shadow: 0 -5px 20px rgba(0,0,0,0.2);
+        
+        /* ล้างค่า Desktop ทิ้ง */
+        transform: translate(0, 0) !important; 
+        transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    /* 2. สถานะปิด (Collapsed) ของ Mobile ปกติ (เต็มจอ) */
+    .overview-page-container.collapsed .sidebar {
+        transform: translate(0, calc(60vh - 70px)) !important; 
+        width: 100% !important;
+    }
+
+    /* 3. เฉพาะ iPad / Tablet (หน้าจอ > 600px) */
+    /* ต้อง Override ค่าด้านบนให้หมด */
+    @media (min-width: 600px) {
+        .sidebar {
+            width: 500px !important; /* ความกว้างตอนเปิด */
+            left: 50% !important;    
+            right: auto !important;
+            bottom: 20px !important; 
+            border-radius: 20px !important;
+            
+            /* จัดกึ่งกลางจอ */
+            transform: translate(-50%, 0) !important; 
+        }
+        
+        /* [แก้จุดที่ผิด] สถานะปิดของ iPad */
+        .overview-page-container.collapsed .sidebar {
+            /* ต้องบังคับความกว้างตอนปิด ให้เท่ากับตอนเปิด ไม่งั้นมันจะเด้งไป 100% */
+            width: 500px !important; 
+            
+            /* เลื่อนลงไปข้างล่าง (แกน Y) แต่ยังคงกึ่งกลาง (แกน X -50%) */
+            transform: translate(-50%, calc(55vh - 70px)) !important; 
+        }
+    }
+
+    /* ซ่อนปุ่มลูกศร Desktop */
+    .sidebar-toggle { display: none !important; }
+
+    /* ขีด Handle */
+    .sidebar .header::before {
+        content: ''; display: block; position: absolute;
+        top: 10px; left: 50%; transform: translateX(-50%);
+        width: 40px; height: 5px; background-color: #e0e0e0; border-radius: 3px;
+    }
+
+    .sidebar .header {
+        cursor: pointer; justify-content: center; position: relative; padding-top: 25px;
+    }
+    
+    .header-logo-icon { display: none; }
+    .overview-grid { padding: 10px; padding-bottom: 80px; }
+    .overview-card { min-width: auto; width: 100%; padding: 1rem; }
+
+    /* Dashboard Fixes */
+    .dashboard-container { padding: 15px; max-width: 100%; }
+    .main-content { display: flex; flex-direction: column; gap: 15px; }
+    .header { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .header-right { width: 100%; display: flex; justify-content: flex-end; }
+    .status-widget .status-metrics { flex-direction: row; gap: 20px; }
+    @media (max-width: 400px) { .status-widget .status-metrics { flex-direction: column; } }
+    .details-widget .map-container { height: 200px; }
+    #waterChart { min-height: 250px; }
+    .modal-content { width: 90%; max-width: 600px; margin: 10vh auto; }
+    .insights-grid { grid-template-columns: 1fr 1fr; }
+    @media (max-width: 600px) {
+        .insights-grid { grid-template-columns: 1fr; }
+        .insight-item { grid-column: span 1 !important; }
+    }
+}
