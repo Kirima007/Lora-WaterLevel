@@ -10,7 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;700&display=swap" rel="stylesheet">
 </head>
 
 <body data-tank-id="tank1">
@@ -53,6 +53,11 @@
                 <div class="widget details-widget">
                     <h3>ข้อมูลบ่อ</h3>
                     <div id="tankDetails"></div>
+                    
+                    <p class="last-updated" style="margin-top: 10px; border-top: 1px solid #eee; padding-top: 10px;">
+                        <small style="color: #999;">อัปเดตล่าสุด:</small>
+                        <small id="lastUpdated"; color: var(--text-primary);">N/A</small>
+                    </p>
                 </div>
 
                 <div class="action-buttons-container">
@@ -83,7 +88,7 @@
                             </tbody>
                         </table>
                     </div>
-                    <p class="last-updated">อัปเดตล่าสุด: <span id="lastUpdated">N/A</span></p>
+                    
                 </div>
             </div>
         </main>

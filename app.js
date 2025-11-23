@@ -181,11 +181,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // --- แทนที่ฟังก์ชัน render() เดิม ---
     function render() {
         if (allData.length === 0) return;
         updateLatestInfo(allData[0]);
         elements.dataTableBody.innerHTML = '';
-        allData.slice(0, 50).forEach(row => appendTableRow(row));
+        
+        // ส่ง index และ array เต็มไปให้ appendTableRow เพื่อคำนวณ Trend
+        allData.slice(0, 50).forEach((row, index) => appendTableRow(row, index, allData));
+        
         const chartData = [...allData].reverse().map(d => ({ x: new Date(d.timestamp), y: d.height }));
         if (!waterChartManager) {
             waterChartManager = new WaterChartManager(elements.waterChart);
@@ -195,11 +199,42 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function appendTableRow(row) {
+    // --- แทนที่ฟังก์ชัน appendTableRow() เดิม ---
+    function appendTableRow(row, index, fullData) {
         const dateObj = new Date(row.timestamp);
         const status = getStatus(row.height);
+        
+        // คำนวณแนวโน้ม (Trend) เทียบกับข้อมูลก่อนหน้า (index + 1)
+        let trendIcon = '<span class="trend-arrow trend-steady" title="ทรงตัว">-</span>';
+        
+        if (index < fullData.length - 1) {
+            const prevRow = fullData[index + 1];
+            const diff = row.height - prevRow.height;
+            
+            // ถ้าต่างกันมากกว่า 0.005 เมตร ให้แสดงลูกศร
+            if (diff > 0.005) { 
+                trendIcon = '<span class="trend-arrow trend-up" title="กำลังเพิ่มขึ้น">↗</span>';
+            } else if (diff < -0.005) { 
+                trendIcon = '<span class="trend-arrow trend-down" title="กำลังลดลง">↘</span>';
+            }
+        }
+
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${dateObj.toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' })}</td><td>${dateObj.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}</td><td>${row.height.toFixed(2)}</td><td style="color: ${status.color}; font-weight: 500;">${status.label}</td>`;
+        tr.innerHTML = `
+            <td class="num-cell" style="color: #666;">
+                ${dateObj.toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' })}
+            </td>
+            <td class="num-cell">
+                ${dateObj.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}
+            </td>
+            <td class="num-cell" style="font-size: 1.05em; font-weight: 600;">
+                ${row.height.toFixed(2)} ${trendIcon}
+            </td>
+            <td>
+                <span class="status-badge ${status.className}">
+                    ${status.label}
+                </span>
+            </td>`;
         elements.dataTableBody.appendChild(tr);
     }
 
@@ -272,7 +307,7 @@ document.addEventListener('DOMContentLoaded', () => {
             chart: {
                 type: 'area',
                 height: '100%',
-                fontFamily: 'Inter, sans-serif',
+                fontFamily: 'Prompt, sans-serif',
                 background: 'transparent',
                 toolbar: { show: true, tools: { download: false } },
                 zoom: { enabled: true },
@@ -314,7 +349,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 tickAmount: 6,
                 labels: {
                     datetimeUTC: false,
-                    style: { colors: '#999', fontFamily: 'Inter, sans-serif' },
+                    style: { colors: '#999', fontFamily: 'Prompt, sans-serif' },
                     datetimeFormatter: {
                         year: 'yyyy',
                         month: 'MM/yyyy',
@@ -326,7 +361,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             yaxis: {
                 min: 0, max: config.maxHeight, tickAmount: 5,
-                labels: { style: { colors: '#999', fontFamily: 'Inter, sans-serif' }, formatter: val => val.toFixed(1) }
+                labels: { style: { colors: '#999', fontFamily: 'Prompt, sans-serif' }, formatter: val => val.toFixed(1) }
             },
             grid: { borderColor: 'rgba(0,0,0,0.06)', strokeDashArray: 4, padding: { right: 20 } },
 
@@ -347,7 +382,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             style: {
                                 color: '#fff', // ตัวหนังสือขาว
                                 background: cHigh, // พื้นหลังแดงทึบ
-                                fontSize: '12px', fontWeight: 600, fontFamily: 'Inter, sans-serif',
+                                fontSize: '12px', fontWeight: 600, fontFamily: 'Prompt, sans-serif',
                                 padding: { left: 8, right: 8, top: 2, bottom: 2 }
                             }
                         }
@@ -366,7 +401,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             style: {
                                 color: '#333', // ตัวหนังสือสีเข้ม (อ่านง่ายบนพื้นเหลือง)
                                 background: cLow, // พื้นหลังเหลืองทึบ
-                                fontSize: '12px', fontWeight: 600, fontFamily: 'Inter, sans-serif',
+                                fontSize: '12px', fontWeight: 600, fontFamily: 'Prompt, sans-serif',
                                 padding: { left: 8, right: 8, top: 2, bottom: 2 }
                             }
                         }
@@ -395,7 +430,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         label: {
                             text: 'น้ำท่วม',
                             position: 'right', textAnchor: 'end', offsetX: 0, offsetY: -10, borderRadius: 4, borderColor: cHigh,
-                            style: { color: '#fff', background: cHigh, fontSize: '12px', fontWeight: 600, fontFamily: 'Inter, sans-serif', padding: { left: 8, right: 8, top: 2, bottom: 2 } }
+                            style: { color: '#fff', background: cHigh, fontSize: '12px', fontWeight: 600, fontFamily: 'Prompt, sans-serif', padding: { left: 8, right: 8, top: 2, bottom: 2 } }
                         }
                     },
                     { y: 0, y2: droughtThreshold, fillColor: cLow, opacity: 0.12 },
@@ -404,7 +439,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         label: {
                             text: 'น้ำแห้ง',
                             position: 'right', textAnchor: 'end', offsetX: 0, offsetY: 10, borderRadius: 4, borderColor: cLow,
-                            style: { color: '#333', background: cLow, fontSize: '12px', fontWeight: 600, fontFamily: 'Inter, sans-serif', padding: { left: 8, right: 8, top: 2, bottom: 2 } }
+                            style: { color: '#333', background: cLow, fontSize: '12px', fontWeight: 600, fontFamily: 'Prompt, sans-serif', padding: { left: 8, right: 8, top: 2, bottom: 2 } }
                         }
                     }
                 ]

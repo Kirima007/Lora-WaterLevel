@@ -30,7 +30,7 @@ html {
 }
 
 body {
-    font-family: 'Inter', sans-serif;
+    font-family: 'Prompt', sans-serif;
     background-color: var(--bg-color);
     color: var(--text-primary);
     font-weight: 400;
@@ -284,7 +284,7 @@ h1, h2, h3 {
 }
 
 .leaflet-popup-content {
-    font-family: 'Inter', sans-serif;
+    font-family: 'Prompt', sans-serif;
     font-size: 1rem;
     margin: 0 !important;
     width: 280px !important;
@@ -418,7 +418,7 @@ h1, h2, h3 {
     border-radius: 8px;
     color: #ffffff;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    margin-bottom: 24px;
+    margin-bottom: 12px;
 }
 .header-left { display: flex; align-items: center; gap: 20px; }
 .header h1 { font-size: 1.8em; color: #ffffff;}
@@ -436,17 +436,17 @@ h1, h2, h3 {
 .main-content {
     display: grid;
     grid-template-columns: 340px 1fr;
-    gap: 24px;
+    gap: 12px;
     align-items: start;
     grid-template-areas: "info main";
 }
-.info-column { grid-area: info; display: flex; flex-direction: column; gap: 24px; }
-.main-column { grid-area: main; display: flex; flex-direction: column; gap: 24px; }
+.info-column { grid-area: info; display: flex; flex-direction: column; gap: 12px; }
+.main-column { grid-area: main; display: flex; flex-direction: column; gap: 12px; }
 
 .widget {
     background-color: var(--widget-bg-color);
     border: 1px solid var(--border-color);
-    padding: 24px;
+    padding: 20px;
     border-radius: 8px;
     box-shadow: 0 2px 5px rgba(40, 40, 40, 0.08);
     display: flex; flex-direction: column;
@@ -479,9 +479,15 @@ th { background: #f1f3f5; color: var(--text-primary); font-weight: 700; position
 td { padding: 12px 15px; border-bottom: 1px solid var(--border-color); }
 tbody tr:hover { background-color: var(--accent-color-light); }
 tbody tr:last-child td { border-bottom: none; }
-.last-updated { text-align: right; font-size: 0.9em; color: var(--text-secondary); margin-top: 15px; }
+.last-updated {
+    /* ของเดิมเป็น text-align: right; ให้ลบ หรือเปลี่ยนเป็น left */
+    text-align: left; 
+    font-size: 0.9em;
+    color: var(--text-secondary);
+    /* margin-top: 15px; อันนี้ลบออกได้เพราะเราใส่ใน HTML แล้ว หรือจะคงไว้ก็ได้ */
+}
 
-.action-buttons-container { display: flex; flex-direction: column; gap: 16px; }
+.action-buttons-container { display: flex; flex-direction: column; gap: 12px; }
 .action-btn {
     padding: 12px; border: none; border-radius: 6px; cursor: pointer;
     font-size: 1em; font-weight: 700; transition: all 0.3s ease;
@@ -702,3 +708,102 @@ tbody tr:last-child td { border-bottom: none; }
     100% { opacity: 0.6; transform: scale(0.95); }
 }
 
+/* =========================================
+   ส่วนเสริมสำหรับตาราง (Table Widget Update)
+   ก๊อปปี้ไปวางต่อท้ายไฟล์ style.css ได้เลย
+   ========================================= */
+
+/* ปรับระยะห่างตารางให้ดูโปร่งขึ้น */
+.table-widget table {
+    border-collapse: separate; 
+    border-spacing: 0;
+}
+
+.table-widget th {
+    background-color: #f8f9fa;
+    color: var(--text-secondary);
+    font-family: 'Prompt', sans-serif; /* เปลี่ยนฟอนต์ */
+    font-weight: 600;
+    font-size: 0.8rem; /* ลดขนาดฟอนต์หัวตาราง */
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    
+    /* --- จุดที่ทำให้ Compact --- */
+    padding: 8px 12px; /* ลดจาก 16px เหลือ 8px */
+    border-bottom: 2px solid var(--border-color);
+}
+
+.table-widget td {
+    /* --- จุดที่ทำให้ Compact --- */
+    padding: 6px 12px; /* ลดจาก 14px เหลือ 6px */
+    
+    border-bottom: 1px solid #f0f0f0;
+    vertical-align: middle;
+    font-size: 0.9rem; /* ลดขนาดตัวอักษรข้อมูลลงนิดหน่อย */
+}
+
+/* ปรับป้ายสถานะในตารางให้เล็กลงด้วย */
+.table-widget .status-badge {
+    padding: 1px 8px; /* ลด padding ป้าย */
+    min-width: 60px;  /* ลดความกว้างขั้นต่ำ */
+    font-size: 0.75rem; /* ตัวหนังสือในป้ายเล็กลง */
+    border-radius: 4px; /* ปรับให้เหลี่ยมขึ้นนิดหน่อยเพื่อให้ดู Clean */
+}
+
+/* ปรับความสูงของกล่องตารางให้เหมาะสมกับแบบ Compact */
+.table-container { 
+    overflow-y: auto; 
+    max-height: 250px; /* ปรับความสูงตามต้องการ */
+    width: 100%; 
+}
+
+/* ทำให้ตัวเลขเรียงหลักตรงกัน (Tabular Nums) */
+.num-cell {
+    font-variant-numeric: tabular-nums;
+    font-family: 'Prompt', sans-serif;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+/* --- สไตล์ของป้ายสถานะ (Badge) --- */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    min-width: 85px; /* กำหนดความกว้างขั้นต่ำให้เท่ากันสวยงาม */
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+/* สีพื้นหลังแบบพาสเทล + ตัวหนังสือเข้ม (อ่านง่ายกว่าเดิม) */
+.status-badge.high { 
+    background-color: #fde8e8; 
+    color: #c53030; /* แดงเข้ม */
+    border: 1px solid #fbd5d5;
+}
+
+.status-badge.normal { 
+    background-color: #def7ec; 
+    color: #03543f; /* เขียวเข้ม */
+    border: 1px solid #bcf0da;
+}
+
+.status-badge.low { 
+    background-color: #fdf6b2; 
+    color: #723b13; /* เหลืองเข้ม/น้ำตาล */
+    border: 1px solid #fce96a;
+}
+
+/* --- ลูกศรบอกแนวโน้ม (Trend Arrow) --- */
+.trend-arrow {
+    display: inline-block;
+    margin-left: 8px;
+    font-size: 0.9em;
+    font-weight: bold;
+}
+.trend-up { color: var(--high-color); transform: rotate(-45deg); display: inline-block; }
+.trend-down { color: var(--normal-color); transform: rotate(45deg); display: inline-block; }
+.trend-steady { color: #ccc; font-weight: normal; }
