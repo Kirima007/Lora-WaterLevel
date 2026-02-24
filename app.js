@@ -178,15 +178,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 // ลบสีปุ่มเก่า แล้วไฮไลต์ปุ่มที่ถูกกด
                 timeBtns.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-                
+
                 if (!waterChartManager || !waterChartManager.chart) return;
-                
+
                 const range = btn.dataset.range;
                 const latestTime = allData.length > 0 ? allData[0].timestamp : Date.now();
                 let startTime = null;
-                
+
                 // คำนวณเวลาย้อนหลัง
-                switch(range) {
+                switch (range) {
                     case '6h': startTime = latestTime - (6 * 60 * 60 * 1000); break;
                     case '24h': startTime = latestTime - (24 * 60 * 60 * 1000); break;
                     case '7d': startTime = latestTime - (7 * 24 * 60 * 60 * 1000); break;
@@ -195,7 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     case '1y': startTime = latestTime - (365 * 24 * 60 * 60 * 1000); break;
                     case 'all': startTime = null; break;
                 }
-                
+
                 // สั่งกราฟซูม (Dispatch Action ไปที่ ECharts)
                 if (startTime) {
                     waterChartManager.chart.dispatchAction({
@@ -269,13 +269,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (allData.length === 0) return;
         updateLatestInfo(allData[0]);
         elements.dataTableBody.innerHTML = '';
-        
+
         // ส่ง index และ array เต็มไปให้ appendTableRow เพื่อคำนวณ Trend
         allData.slice(0, 50).forEach((row, index) => appendTableRow(row, index, allData));
-        
+
         // 👉 [แก้ไขตรงนี้] ใช้ d.timestamp ที่เป็นตัวเลขตรงๆ กราฟจะเสถียรกว่าและไม่ขยับคลาดเคลื่อน
         const chartData = [...allData].reverse().map(d => ({ x: d.timestamp, y: d.height }));
-        
+
         if (!waterChartManager) {
             waterChartManager = new WaterChartManager(elements.waterChart);
             waterChartManager.create(chartData, config.floodedThreshold, config.droughtThreshold);
@@ -285,35 +285,36 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- แทนที่ฟังก์ชัน appendTableRow() เดิม ---
+    // --- ฟังก์ชันสร้างแถวในตาราง (อัปเกรด) ---
     function appendTableRow(row, index, fullData) {
         const dateObj = new Date(row.timestamp);
-        const status = getStatus(row.height);
+        const status = getStatus(row.height, config);
 
-        // คำนวณแนวโน้ม (Trend) เทียบกับข้อมูลก่อนหน้า (index + 1)
-        let trendIcon = '<span class="trend-arrow trend-steady" title="ทรงตัว">-</span>';
+        // คำนวณแนวโน้ม (Trend) พร้อมตัวเลขส่วนต่าง (+/-)
+        let trendHTML = '<span style="font-size: 0.8em; color: #ccc; margin-left: 5px;">(-)</span>';
 
         if (index < fullData.length - 1) {
             const prevRow = fullData[index + 1];
             const diff = row.height - prevRow.height;
 
-            // ถ้าต่างกันมากกว่า 0.005 เมตร ให้แสดงลูกศร
             if (diff > 0.005) {
-                trendIcon = '<span class="trend-arrow trend-up" title="กำลังเพิ่มขึ้น">↗</span>';
+                trendHTML = `<span style="font-size: 0.8em; color: var(--high-color); margin-left: 5px;" title="กำลังเพิ่มขึ้น">(+${diff.toFixed(2)}) ↗</span>`;
             } else if (diff < -0.005) {
-                trendIcon = '<span class="trend-arrow trend-down" title="กำลังลดลง">↘</span>';
+                trendHTML = `<span style="font-size: 0.8em; color: var(--normal-color); margin-left: 5px;" title="กำลังลดลง">(${diff.toFixed(2)}) ↘</span>`;
             }
         }
 
+        // รวมวันที่และเวลาไว้ในช่องเดียวกัน
+        const dateStr = dateObj.toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' });
+        const timeStr = dateObj.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td class="num-cell" style="color: #666;">
-                ${dateObj.toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' })}
-            </td>
-            <td class="num-cell">
-                ${dateObj.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}
+            <td class="num-cell" style="color: #666; font-size: 0.85em; text-align: left; padding-left: 15px;">
+                ${dateStr} <span style="color: #ddd; margin: 0 4px;">|</span> <strong style="color: var(--text-primary);">${timeStr}</strong>
             </td>
             <td class="num-cell" style="font-size: 1.05em; font-weight: 600;">
-                ${row.height.toFixed(2)} ${trendIcon}
+                ${row.height.toFixed(2)} ${trendHTML}
             </td>
             <td>
                 <span class="status-badge ${status.className}">
@@ -323,43 +324,71 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.dataTableBody.appendChild(tr);
     }
 
+    // --- อัปเดตข้อมูลสถานะปัจจุบัน (กราฟิกถังน้ำ) ---
     function updateLatestInfo(data) {
         if (!data) return;
-        const date = new Date(data.timestamp);
-        elements.lastUpdated.textContent = `${date.toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' })}`;
 
         const height = data.height;
-        // คำนวณเปอร์เซ็นต์ (Limit ไว้ไม่ให้เกิน 0-100)
         let percentage = (height / config.maxHeight) * 100;
-        percentage = Math.max(0, Math.min(100, percentage));
+        percentage = Math.max(0, Math.min(100, percentage)); // ล็อกให้อยู่แค่ 0-100%
 
+        const status = getStatus(height, config);
+        const statusEmoji = status.label === "น้ำท่วม" ? "🌊" : status.label === "น้ำแห้ง" ? "☀️" : "💧";
+
+        // 1. อัปเดตตัวเลข
         elements.currentHeight.textContent = `${height.toFixed(2)} m`;
-        elements.currentPercent.textContent = `${percentage.toFixed(1)} %`;
+        elements.currentPercent.textContent = `${percentage.toFixed(1)}%`;
+        elements.currentHeight.style.color = status.color;
 
-        const status = getStatus(height);
-
-        // --- ส่วนที่เพิ่ม: อัปเดต Liquid Gauge ---
+        // 2. อัปเดตแอนิเมชันคลื่นน้ำ (Liquid Gauge)
         const waveElement = document.getElementById('waveElement');
         if (waveElement) {
-            // คำนวณตำแหน่ง Top: 100% คือน้ำแห้ง, 0% คือน้ำเต็ม
-            // ต้องชดเชยค่าเล็กน้อยเพราะคลื่นมันหมุน
-            const topPos = 100 - percentage;
+            // คำนวณความสูงคลื่น (0% คือ top: 100%, 100% คือ top: 0%)
+            // -10 เพื่อชดเชยให้คลื่นกระเพื่อมไม่ทะลุขอบล่างจนหายไป
+            const topPos = 100 - percentage - 10;
             waveElement.style.top = `${topPos}%`;
 
-            // เปลี่ยนสีน้ำตามสถานะ
-            waveElement.className = 'liquid-wave'; // รีเซ็ตคลาสเดิม
-            waveElement.classList.add(`status-${status.className}`); // ใส่สีตามสถานะ (high/normal/low)
+            waveElement.className = 'liquid-wave';
+            waveElement.classList.add(`status-${status.className}`);
         }
-        // ------------------------------------
 
-        elements.alertBox.className = 'status-alert';
-        elements.alertBox.classList.add(`alert-${status.className}`);
-        const statusEmoji = status.label === "น้ำท่วม" ? "🌊" : status.label === "น้ำแห้ง" ? "☀️" : "💧";
+        // 3. อัปเดตป้าย Alert มุมขวาบน
+        elements.alertBox.className = `status-badge ${status.className}`;
         elements.alertBox.innerHTML = `${statusEmoji} ${status.label}`;
 
-        elements.currentHeight.style.color = status.color;
-        // ตัวเลข % ในวงกลม ไม่ต้องเปลี่ยนสีตาม status แล้ว เพราะสีน้ำเปลี่ยนแทน
-        // elements.currentPercent.style.color = status.color; 
+        // 4. คำนวณแนวโน้ม (Trend) เทียบกับข้อมูลก่อนหน้า
+        const topTrendIcon = document.getElementById('topTrendIcon');
+        if (topTrendIcon && allData.length > 1) {
+            const prevHeight = allData[1].height;
+            const diff = height - prevHeight;
+
+            if (diff > 0.005) {
+                topTrendIcon.innerHTML = `<span style="color: var(--high-color);">↗ (+${diff.toFixed(2)})</span>`;
+            } else if (diff < -0.005) {
+                topTrendIcon.innerHTML = `<span style="color: var(--normal-color);">↘ (${diff.toFixed(2)})</span>`;
+            } else {
+                topTrendIcon.innerHTML = `<span style="color: #ccc; font-weight: normal;">- (ทรงตัว)</span>`;
+            }
+        }
+
+        // 5. อัปเดตเวลา "อัปเดตเมื่อกี่นาทีที่แล้ว"
+        const now = Date.now();
+        const diffMs = now - data.timestamp;
+        const diffMins = Math.floor(diffMs / 60000);
+        const timeAgoEl = document.getElementById('timeAgoText');
+
+        if (timeAgoEl) {
+            if (diffMins <= 1) {
+                timeAgoEl.textContent = "เพิ่งอัปเดตเมื่อสักครู่";
+                timeAgoEl.style.color = "var(--normal-color)";
+            } else {
+                timeAgoEl.textContent = `เมื่อ ${diffMins} นาทีที่แล้ว`;
+                timeAgoEl.style.color = "var(--text-secondary)";
+            }
+        }
+
+        // อัปเดตเวลาแบบเต็มด้วย
+        elements.lastUpdated.textContent = new Date(data.timestamp).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' });
     }
 
     function parseGoogleDate(str) {
@@ -387,7 +416,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         create(data, floodedThreshold, droughtThreshold) {
             this.chart = echarts.init(this.container);
-            
+
             const style = getComputedStyle(document.documentElement);
             const cAccent = style.getPropertyValue('--accent-color').trim() || '#F58220';
             const cHigh = style.getPropertyValue('--high-color').trim() || '#dc3545';
@@ -404,12 +433,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     formatter: function (params) {
                         const date = new Date(params[0].value[0]);
                         const height = params[0].value[1].toFixed(2);
-                        
+
                         let status = 'ปกติ';
                         let color = cNormal;
                         if (height > floodedThreshold) { status = 'น้ำท่วม'; color = cHigh; }
                         else if (height < droughtThreshold) { status = 'น้ำแห้ง'; color = cLow; }
-                        
+
                         return `
                             <div style="font-family: 'Prompt', sans-serif;">
                                 <strong style="color: #666; font-size: 0.9em;">${date.toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' })}</strong><br/>
@@ -421,7 +450,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 dataZoom: [
                     { type: 'inside' },
-                    { 
+                    {
                         type: 'slider', bottom: 10, height: 25,
                         borderColor: 'transparent', backgroundColor: '#f4f4f4',
                         fillerColor: 'rgba(245, 130, 32, 0.2)', handleStyle: { color: cAccent },
@@ -434,15 +463,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     splitLine: { show: false }, axisLine: { lineStyle: { color: '#ddd' } }
                 },
                 yAxis: {
-                    type: 'value', 
-                    min: 0, 
+                    type: 'value',
+                    min: 0,
                     max: config.maxHeight, // 👉 ล็อกแกน Y ให้คงที่เหมือนเดิม
                     axisLabel: { fontFamily: 'Prompt, sans-serif', color: '#999' },
                     splitLine: { lineStyle: { type: 'dashed', color: '#eee' } }
                 },
                 series: [{
                     name: 'ระดับน้ำ', type: 'line', data: [],
-                    smooth: true, 
+                    smooth: true,
                     symbol: 'none',
                     lineStyle: { width: 2.5 },
                     itemStyle: { color: cAccent },
@@ -473,18 +502,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 series: [{
                     data: chartData,
                     markLine: {
-                        silent: true, 
+                        silent: true,
                         symbol: ['none', 'none'],
                         data: [
-                            { 
-                                yAxis: floodedThreshold, 
-                                lineStyle: { color: cHigh, type: 'dashed', width: 1.5 }, 
-                                label: { formatter: ' น้ำท่วม ', position: 'insideEndTop', backgroundColor: cHigh, color: '#fff', padding: [3, 6], borderRadius: 4, fontFamily: 'Prompt, sans-serif', fontSize: 11 } 
+                            {
+                                yAxis: floodedThreshold,
+                                lineStyle: { color: cHigh, type: 'dashed', width: 1.5 },
+                                label: { formatter: ' น้ำท่วม ', position: 'insideEndTop', backgroundColor: cHigh, color: '#fff', padding: [3, 6], borderRadius: 4, fontFamily: 'Prompt, sans-serif', fontSize: 11 }
                             },
-                            { 
-                                yAxis: droughtThreshold, 
-                                lineStyle: { color: cLow, type: 'dashed', width: 1.5 }, 
-                                label: { formatter: ' น้ำแห้ง ', position: 'insideEndBottom', backgroundColor: cLow, color: '#333', padding: [3, 6], borderRadius: 4, fontFamily: 'Prompt, sans-serif', fontSize: 11 } 
+                            {
+                                yAxis: droughtThreshold,
+                                lineStyle: { color: cLow, type: 'dashed', width: 1.5 },
+                                label: { formatter: ' น้ำแห้ง ', position: 'insideEndBottom', backgroundColor: cLow, color: '#333', padding: [3, 6], borderRadius: 4, fontFamily: 'Prompt, sans-serif', fontSize: 11 }
                             }
                         ]
                     },
@@ -494,7 +523,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             // 👉 ใช้ config.maxHeight แทน 'max' ทำให้แถบสีแดงเต็มกรอบ 100% แน่นอน
                             [
                                 { yAxis: floodedThreshold, itemStyle: { color: cHigh, opacity: 0.1 } },
-                                { yAxis: config.maxHeight } 
+                                { yAxis: config.maxHeight }
                             ],
                             // แถบสีเหลือง
                             [
@@ -602,8 +631,8 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.insightsModal.classList.add('show');
     }
 
-    function hideInsightsPopup() { 
-        elements.insightsModal.classList.remove('show'); 
+    function hideInsightsPopup() {
+        elements.insightsModal.classList.remove('show');
     }
 
     init();

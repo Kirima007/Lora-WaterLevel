@@ -36,16 +36,33 @@
         <main class="main-content">
             <div class="info-column">
                 <div class="widget status-widget">
-                    <h3>สถานะปัจจุบัน</h3>
-                    <div id="alertBox" class="status-alert">กำลังรอข้อมูล...</div>
-                    <div class="status-metrics">
-                        <div class="metric-item">
-                            <span class="metric-label">ระดับน้ำ</span>
-                            <div id="currentHeight" class="metric-value">N/A</div>
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+                        <h3 style="margin-bottom: 0;">สถานะปัจจุบัน</h3>
+                        <div id="alertBox" class="status-badge normal" style="font-size: 0.9em; padding: 4px 12px;">กำลังรอข้อมูล...</div>
+                    </div>
+                    
+                    <div class="status-display-container">
+                        <div class="liquid-gauge-container">
+                            <div class="liquid-gauge">
+                                <div id="waveElement" class="liquid-wave"></div>
+                                <div class="gauge-text">
+                                    <span id="currentPercent">0.0%</span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="metric-item">
-                            <span class="metric-label">ปริมาณในบ่อ</span>
-                            <div id="currentPercent" class="metric-value">N/A</div>
+
+                        <div class="status-metrics-vertical">
+                            <div class="metric-item-v">
+                                <span class="metric-label">ระดับน้ำ</span>
+                                <div class="metric-value-wrapper">
+                                    <span id="currentHeight" class="metric-value">0.00 m</span>
+                                    <span id="topTrendIcon" class="trend-icon">-</span>
+                                </div>
+                            </div>
+                            <div class="metric-item-v" style="border-top: 1px dashed #eee; padding-top: 10px; margin-top: 10px;">
+                                <span class="metric-label">อัปเดตข้อมูลเมื่อ</span>
+                                <div id="timeAgoText" style="font-size: 0.9em; color: var(--text-primary); font-weight: 500;">-</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -99,8 +116,7 @@
                         <table>
                             <thead>
                                 <tr>
-                                    <th>วันที่</th>
-                                    <th>เวลา</th>
+                                    <th>วันเวลา</th>
                                     <th>ระดับ (m)</th>
                                     <th>สถานะ</th>
                                 </tr>

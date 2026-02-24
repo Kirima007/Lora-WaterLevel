@@ -780,10 +780,13 @@ tbody tr:last-child td { border-bottom: none; }
    ========================================= */
 
 .table-widget table {
+    width: 100%;
     border-collapse: separate; 
     border-spacing: 0;
+    text-align: center;
 }
 
+/* หัวตารางติดหนึบ (Sticky Header) พร้อมเงา */
 .table-widget th {
     background-color: #f8f9fa;
     color: var(--text-secondary);
@@ -792,19 +795,31 @@ tbody tr:last-child td { border-bottom: none; }
     font-size: 0.8rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    padding: 8px 12px;
+    padding: 10px 12px;
     border-bottom: 2px solid var(--border-color);
+    position: sticky; 
+    top: 0; 
+    z-index: 10;
+    box-shadow: 0 2px 4px -2px rgba(0,0,0,0.1);
 }
 
 .table-widget td {
-    padding: 6px 12px;
+    padding: 8px 12px;
     border-bottom: 1px solid #f0f0f0;
     vertical-align: middle;
     font-size: 0.9rem;
 }
 
+/* ลายม้าลายสลับสี (Zebra Striping) */
+.table-widget tbody tr:nth-child(even) {
+    background-color: #fdfdfd;
+}
+.table-widget tbody tr:hover {
+    background-color: var(--accent-color-light);
+}
+
 .table-widget .status-badge {
-    padding: 1px 8px;
+    padding: 2px 8px;
     min-width: 60px;
     font-size: 0.75rem;
     border-radius: 4px;
@@ -814,6 +829,7 @@ tbody tr:last-child td { border-bottom: none; }
     overflow-y: auto; 
     max-height: 250px;
     width: 100%; 
+    border-radius: 6px; /* ขอบโค้งมนนิดๆ */
 }
 
 .num-cell {
@@ -1288,4 +1304,116 @@ tbody tr:last-child td { border-bottom: none; }
     color: #ffffff;
     border-color: var(--accent-color);
     font-weight: 600;
+}
+
+/* =========================================
+   Liquid Gauge Animation (กราฟิกจำลองถังน้ำ)
+   ========================================= */
+.status-display-container {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+@media (max-width: 480px) {
+    .status-display-container {
+        flex-direction: column;
+    }
+}
+
+.liquid-gauge-container {
+    flex-shrink: 0;
+}
+
+.liquid-gauge {
+    width: 120px;
+    height: 120px;
+    background-color: #f0f4f8;
+    border-radius: 50%;
+    position: relative;
+    overflow: hidden;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.1), 0 4px 10px rgba(0,0,0,0.05);
+    border: 4px solid #fff;
+}
+
+.gauge-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+    font-size: 1.4em;
+    font-weight: 700;
+    color: #333;
+    text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+}
+
+.liquid-wave {
+    position: absolute;
+    width: 250px;
+    height: 250px;
+    top: 100%; /* ค่าเริ่มต้นอยู่ล่างสุด */
+    left: 50%;
+    margin-left: -125px; /* ดึงกลับมากึ่งกลาง */
+    background-color: var(--normal-color);
+    border-radius: 40%; /* ทำให้ขอบมนๆ เวลาหมุนจะดูเป็นคลื่น */
+    animation: wave-spin 5s infinite linear;
+    transition: top 1s cubic-bezier(0.175, 0.885, 0.32, 1.275), background-color 0.5s ease;
+    opacity: 0.8;
+}
+
+/* คลื่นซ้อนชั้นที่ 2 ให้ดูมีมิติ */
+.liquid-wave::after {
+    content: '';
+    position: absolute;
+    width: 250px;
+    height: 250px;
+    top: 5px;
+    left: 5px;
+    background-color: var(--normal-color);
+    border-radius: 45%;
+    animation: wave-spin 7s infinite linear;
+    opacity: 0.5;
+    transition: background-color 0.5s ease;
+}
+
+/* สีของน้ำตามสถานะ */
+.liquid-wave.status-high, .liquid-wave.status-high::after { background-color: var(--high-color); }
+.liquid-wave.status-low, .liquid-wave.status-low::after { background-color: var(--low-color); }
+.liquid-wave.status-normal, .liquid-wave.status-normal::after { background-color: var(--normal-color); }
+
+@keyframes wave-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.status-metrics-vertical {
+    flex-grow: 1;
+    width: 100%;
+}
+
+.metric-item-v .metric-label {
+    display: block;
+    font-size: 0.85em;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+
+.metric-value-wrapper {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    flex-wrap: wrap; /* 👉 เพิ่มตรงนี้: อนุญาตให้วงเล็บ (ทรงตัว) ปัดตกบรรทัดได้ถ้าจอมือถือแคบไป */
+}
+
+.metric-value-wrapper .metric-value {
+    font-size: 1.8em;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap; /* 👉 เพิ่มตรงนี้: ล็อกตัวเลขกับตัว m ให้อยู่ติดกันเสมอ ห้ามแยกบรรทัด */
+}
+
+.trend-icon {
+    font-size: 1.2em;
+    font-weight: bold;
 }
