@@ -36,11 +36,13 @@
         <main class="main-content">
             <div class="info-column">
                 <div class="widget status-widget">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
                         <h3 style="margin-bottom: 0;">สถานะปัจจุบัน</h3>
-                        <div id="alertBox" class="status-badge normal" style="font-size: 0.9em; padding: 4px 12px;">กำลังรอข้อมูล...</div>
+                        <div id="alertBox" class="status-badge normal" style="font-size: 0.9em; padding: 4px 12px;">
+                            กำลังรอข้อมูล...</div>
                     </div>
-                    
+
                     <div class="status-display-container">
                         <div class="liquid-gauge-container">
                             <div class="liquid-gauge">
@@ -59,24 +61,28 @@
                                     <span id="topTrendIcon" class="trend-icon">-</span>
                                 </div>
                             </div>
-                            <div class="metric-item-v" style="border-top: 1px dashed #eee; padding-top: 10px; margin-top: 10px;">
+                            <div class="metric-item-v"
+                                style="border-top: 1px dashed #eee; padding-top: 10px; margin-top: 10px;">
                                 <span class="metric-label">อัปเดตข้อมูลเมื่อ</span>
-                                <div id="timeAgoText" style="font-size: 0.9em; color: var(--text-primary); font-weight: 500;">-</div>
+                                <div id="timeAgoText"
+                                    style="font-size: 0.9em; color: var(--text-primary); font-weight: 500;">-</div>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="widget details-widget">
-                    <div class="details-header" id="toggleDetailsBtn" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div class="details-header" id="toggleDetailsBtn"
+                        style="display: flex; justify-content: space-between; align-items: center;">
                         <h3 style="margin-bottom: 0;">ข้อมูลบ่อ & แผนที่</h3>
-                        <span id="detailsIcon" style="transition: transform 0.3s; color: var(--text-secondary);">▼</span>
+                        <span id="detailsIcon"
+                            style="transition: transform 0.3s; color: var(--text-secondary);">▼</span>
                     </div>
-                    
+
                     <div id="tankDetailsContainer" class="collapsible-content">
                         <div id="tankDetails" style="margin-top: 15px;"></div>
                     </div>
-                    
+
                     <p class="last-updated" style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px;">
                         <small style="color: #999;">อัปเดตล่าสุด:</small>
                         <small id="lastUpdated" style="color: var(--text-primary);">N/A</small>
@@ -89,13 +95,18 @@
                 </div>
 
                 <div class="device-image-wrapper" style="margin-top: 12px;">
-                    <img id="deviceImg" src="https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?q=80&w=800&auto=format&fit=crop" alt="ภาพตัวเครื่อง" style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px; cursor: zoom-in; box-shadow: 0 2px 5px rgba(0,0,0,0.08); transition: opacity 0.3s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+                    <img id="deviceImg"
+                        src="https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?q=80&w=800&auto=format&fit=crop"
+                        alt="ภาพตัวเครื่อง"
+                        style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px; cursor: zoom-in; box-shadow: 0 2px 5px rgba(0,0,0,0.08); transition: opacity 0.3s;"
+                        onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
                 </div>
             </div>
 
             <div class="main-column">
                 <div class="widget chart-widget">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
                         <h3 style="margin-bottom: 0;">กราฟแสดงระดับน้ำ</h3>
                         <div class="chart-controls">
                             <button class="time-filter-btn" data-range="6h">6 ชม.</button>
@@ -125,17 +136,17 @@
                             </tbody>
                         </table>
                     </div>
-                    
+
                 </div>
             </div>
         </main>
         <footer class="main-footer">
-        <p class="footer-title">Developed by <strong>Weerapat Charoenwan & Team</strong></p>
-        <p class="footer-subtitle">AIOT LAB , IOT SYSTEM & INFORMATION, KMITL</p>
-        <div class="footer-badge">
-            <span class="tech-icon">✦</span> Powered by <span>GEMINI PRO</span>
-        </div>
-    </footer>
+            <p class="footer-title">Developed by <strong>Weerapat Charoenwan & Team</strong></p>
+            <p class="footer-subtitle">AIOT LAB , IOT SYSTEM & INFORMATION, KMITL</p>
+            <div class="footer-badge">
+                <span class="tech-icon">✦</span> Powered by <span>GEMINI PRO</span>
+            </div>
+        </footer>
     </div>
 
     <script src="app.js"></script>
@@ -143,40 +154,38 @@
     <div id="insightsModal" class="modal">
         <div class="modal-content">
             <span class="close-button" id="closeModalBtn">×</span>
-            <h2>ข้อมูลเชิงลึก (1 ชั่วโมงล่าสุด)</h2>
+            <h2 style="font-size: 1.3em; margin-bottom: 15px;">ข้อมูลเชิงลึก (1 ชม. ล่าสุด)</h2>
 
-            <div class="insights-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-
-                <div class="insight-item" style="grid-column: span 2; justify-content: space-between;">
-                    <span>แนวโน้มระดับน้ำ</span>
-                    <strong id="insightTrend">N/A</strong>
+            <div class="insights-grid clean-grid">
+                <div class="insight-item full-row">
+                    <span class="insight-label">แนวโน้มระดับน้ำ</span>
+                    <strong id="insightTrend" class="insight-value text-right">N/A</strong>
                 </div>
 
-                <div class="insight-item" style="grid-column: span 2; justify-content: space-between;">
-                    <span>อัตราการเปลี่ยนแปลง</span>
-                    <strong id="insightRate">N/A</strong>
+                <div class="insight-item full-row">
+                    <span class="insight-label">อัตราการเปลี่ยนแปลง</span>
+                    <strong id="insightRate" class="insight-value text-right">N/A</strong>
                 </div>
 
-                <div class="insight-item" style="flex-direction: column; align-items: flex-start; gap: 5px;">
-                    <span style="font-size: 0.85em;">เวลาน้ำท่วมขัง</span>
-                    <strong id="insightFlood" style="font-size: 1.1em;">N/A</strong>
+                <div class="insight-item">
+                    <span class="insight-label">เวลาน้ำท่วมขัง</span>
+                    <strong id="insightFlood" class="insight-value">N/A</strong>
                 </div>
-                <div class="insight-item" style="flex-direction: column; align-items: flex-start; gap: 5px;">
-                    <span style="font-size: 0.85em;">เวลาน้ำแห้งแล้ง</span>
-                    <strong id="insightDrought" style="font-size: 1.1em;">N/A</strong>
-                </div>
-
-                <div class="insight-item"
-                    style="flex-direction: column; align-items: flex-start; gap: 5px; border-bottom: none;">
-                    <span style="font-size: 0.85em;">ระดับสูงสุด (Max)</span>
-                    <strong id="insightMax" style="font-size: 1.1em;">N/A</strong>
-                </div>
-                <div class="insight-item"
-                    style="flex-direction: column; align-items: flex-start; gap: 5px; border-bottom: none;">
-                    <span style="font-size: 0.85em;">ระดับต่ำสุด (Min)</span>
-                    <strong id="insightMin" style="font-size: 1.1em;">N/A</strong>
+                
+                <div class="insight-item">
+                    <span class="insight-label">เวลาน้ำแห้งแล้ง</span>
+                    <strong id="insightDrought" class="insight-value">N/A</strong>
                 </div>
 
+                <div class="insight-item">
+                    <span class="insight-label">ระดับสูงสุด (Max)</span>
+                    <strong id="insightMax" class="insight-value">N/A</strong>
+                </div>
+                
+                <div class="insight-item" style="border-bottom: none;">
+                    <span class="insight-label">ระดับต่ำสุด (Min)</span>
+                    <strong id="insightMin" class="insight-value">N/A</strong>
+                </div>
             </div>
         </div>
     </div>
