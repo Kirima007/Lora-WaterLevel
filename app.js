@@ -583,10 +583,12 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('insightMax').innerHTML = `${maxHeight.toFixed(2)} m <span class="percent" style="font-size:0.7em; color:#999;">(${toPercent(maxHeight)}%)</span>`;
         document.getElementById('insightMin').innerHTML = `${minHeight.toFixed(2)} m <span class="percent" style="font-size:0.7em; color:#999;">(${toPercent(minHeight)}%)</span>`;
 
-        elements.insightsModal.style.display = 'block';
+        elements.insightsModal.classList.add('show');
     }
 
-    function hideInsightsPopup() { elements.insightsModal.style.display = 'none'; }
+    function hideInsightsPopup() { 
+        elements.insightsModal.classList.remove('show'); 
+    }
 
     init();
 });

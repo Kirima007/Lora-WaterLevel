@@ -88,6 +88,7 @@ h1, h2, h3 {
     border: none;
     box-shadow: 0 2px 10px rgba(0,0,0,0.2);
     transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s;
+    cursor: pointer;
 }
 
 .sidebar-toggle:hover {
@@ -327,7 +328,7 @@ h1, h2, h3 {
 }
 
 
-/* --- Leaflet Map Popup Styles (Updated Fix Spacing) --- */
+/* --- Leaflet Map Popup Styles --- */
 .leaflet-popup-content-wrapper {
     border-radius: 8px;
     box-shadow: 0 4px 20px rgba(0,0,0,0.2);
@@ -518,6 +519,7 @@ h1, h2, h3 {
 .metric-item { flex: 1; }
 .metric-label { font-size: 0.9em; color: var(--text-secondary); margin-bottom: 8px; display: block; }
 .metric-value { font-size: 2.0em; font-weight: 700; }
+
 .details-widget .map-container { height: 180px; margin-bottom: 15px; }
 .details-widget .map-iframe { width: 100%; height: 100%; border: 1px solid var(--border-color); border-radius: 6px; }
 .details-widget .details-list { color: var(--text-primary); line-height: 2; font-size: 0.9em; }
@@ -550,11 +552,51 @@ tbody tr:last-child td { border-bottom: none; }
 .action-btn:hover { opacity: 0.9; transform: translateY(-2px); }
 
 
-/* --- Insights Modal Styles --- */
-.modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); animation: fadeIn 0.3s; }
-.modal-content { background-color: var(--widget-bg-color); color: var(--text-primary); margin: 15vh auto; padding: 30px; border: 1px solid var(--border-color); border-radius: 8px; width: 90%; max-width: 500px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); animation: slideIn 0.3s; }
-.close-button { color: #aaa; float: right; font-size: 28px; font-weight: bold; line-height: 1; }
-.close-button:hover, .close-button:focus { color: var(--text-primary); text-decoration: none; cursor: pointer; }
+/* --- Insights Modal Styles (Animation ใหม่สไตล์ Bouncy) --- */
+.modal { 
+    visibility: hidden; 
+    opacity: 0; 
+    position: fixed; 
+    z-index: 3000; 
+    left: 0; 
+    top: 0; 
+    width: 100%; 
+    height: 100%; 
+    background-color: rgba(0,0,0,0.6); 
+    backdrop-filter: blur(5px);
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+}
+
+.modal.show {
+    visibility: visible;
+    opacity: 1;
+}
+
+.modal-content { 
+    background-color: var(--widget-bg-color); 
+    color: var(--text-primary); 
+    padding: 30px; 
+    border: 1px solid var(--border-color); 
+    border-radius: 12px; 
+    width: 90%; 
+    max-width: 500px; 
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3); 
+    position: relative;
+    
+    /* เอฟเฟกต์ซูมเด้ง (Bouncy) */
+    transform: scale(0.8);
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.modal.show .modal-content {
+    transform: scale(1);
+}
+
+.close-button { color: #aaa; position: absolute; top: 15px; right: 20px; font-size: 28px; font-weight: bold; line-height: 1; transition: color 0.2s;}
+.close-button:hover, .close-button:focus { color: var(--accent-color); text-decoration: none; cursor: pointer; }
 .modal-content h2 { margin-top: 0; margin-bottom: 25px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; }
 .insights-grid { display: grid; gap: 20px; }
 .insight-item { display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid #f0f0f0; }
@@ -563,8 +605,7 @@ tbody tr:last-child td { border-bottom: none; }
 .insight-item strong { font-size: 1.2em; }
 .insight-item .percent { font-size: 0.8em; color: var(--text-secondary); margin-left: 5px; }
 #currentTrend { font-size: 1.5em; }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-@keyframes slideIn { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
 /* --- Styles for Line Overlay --- */
 #line-overlay {
     position: fixed;
@@ -637,6 +678,7 @@ tbody tr:last-child td { border-bottom: none; }
     from { transform: translateY(-100%); }
     to { transform: translateY(0); }
 }
+
 /* --- Credits Footer Styles --- */
 
 /* 1. Sidebar Footer (สำหรับหน้า index) */
@@ -824,8 +866,7 @@ tbody tr:last-child td { border-bottom: none; }
 
 
 /* ============================================
-   MOBILE & TABLET RESPONSIVE FIXES (Final Version)
-   แก้ปัญหาเยื้อง + iPad Logic + Mobile Bottom Sheet
+   MOBILE & TABLET RESPONSIVE FIXES
    ============================================ */
 
 @media (max-width: 1180px) {
@@ -870,12 +911,9 @@ tbody tr:last-child td { border-bottom: none; }
             transform: translate(-50%, 0) !important; 
         }
         
-        /* [แก้จุดที่ผิด] สถานะปิดของ iPad */
+        /* สถานะปิดของ iPad */
         .overview-page-container.collapsed .sidebar {
-            /* ต้องบังคับความกว้างตอนปิด ให้เท่ากับตอนเปิด ไม่งั้นมันจะเด้งไป 100% */
             width: 500px !important; 
-            
-            /* เลื่อนลงไปข้างล่าง (แกน Y) แต่ยังคงกึ่งกลาง (แกน X -50%) */
             transform: translate(-50%, calc(55vh - 70px)) !important; 
         }
     }
@@ -907,22 +945,19 @@ tbody tr:last-child td { border-bottom: none; }
     @media (max-width: 400px) { .status-widget .status-metrics { flex-direction: column; } }
     .details-widget .map-container { height: 200px; }
     #waterChart { min-height: 250px; }
-    .modal-content { width: 90%; max-width: 600px; margin: 10vh auto; }
+    
+    /* นำ margin 10vh auto ออกเพราะใช้ Flexbox Centering แทนแล้วใน modal */
+    .modal-content { width: 90%; max-width: 600px; } 
+    
     .insights-grid { grid-template-columns: 1fr 1fr; }
     @media (max-width: 600px) {
         .insights-grid { grid-template-columns: 1fr; }
         .insight-item { grid-column: span 1 !important; }
     }
 }
+
 /* ============================================
    RESPONSIVE DASHBOARD (MOBILE & TABLET)
-   Target: Tank Pages (tank1.html, tank2.html)
-   ============================================ */
-
-/* Tablet & Mobile (หน้าจอเล็กกว่า 1024px) */
-/* ============================================
-   RESPONSIVE & BEAUTY FIX (FINAL)
-   Target: Tank Pages (Mobile & Tablet)
    ============================================ */
 
 @media (max-width: 1024px) {
@@ -939,23 +974,22 @@ tbody tr:last-child td { border-bottom: none; }
         display: flex;
         flex-direction: column;
         width: 100%;
-        gap: 15px; /* ระยะห่างระหว่างกล่อง Info กับ Chart */
+        gap: 15px; 
     }
 
-    /* สำคัญ: บังคับให้ทั้ง 2 ส่วนกว้างเต็มจอ ไม่เยื้อง */
     .info-column, 
     .main-column {
         width: 100%;
-        min-width: 0; /* แก้บั๊ก Flexbox ดันทะลุในบาง Browser */
+        min-width: 0; 
     }
 
     /* 3. ปรับ Widget ให้ดูดีขึ้นบนจอเล็ก */
     .widget {
-        padding: 20px 15px; /* ลด Padding ด้านข้างลงนิดนึง */
-        margin-bottom: 0;   /* ให้ gap ของ container จัดการระยะห่างแทน */
+        padding: 20px 15px; 
+        margin-bottom: 0;   
     }
 
-    /* 4. Header: จัดให้อยู่กึ่งกลาง หรือ ชิดซ้ายสวยๆ */
+    /* 4. Header */
     .header {
         flex-direction: column;
         align-items: flex-start;
@@ -966,28 +1000,28 @@ tbody tr:last-child td { border-bottom: none; }
     .header-right {
         width: 100%;
         display: flex;
-        justify-content: flex-end; /* ไอคอนชีทอยู่ขวาสุด */
-        border-top: 1px solid rgba(255,255,255,0.2); /* เส้นแบ่งจางๆ */
+        justify-content: flex-end; 
+        border-top: 1px solid rgba(255,255,255,0.2); 
         padding-top: 10px;
     }
 
-    /* 5. กล่องสถานะ (Level/Percent): จัดให้อยู่คู่กันสวยๆ ไม่เบี้ยว */
+    /* 5. กล่องสถานะ (Level/Percent) */
     .status-widget .status-metrics {
         display: grid;
-        grid-template-columns: 1fr 1fr; /* แบ่งครึ่ง 50-50 เป๊ะ */
+        grid-template-columns: 1fr 1fr; 
         gap: 15px;
         text-align: center;
     }
 
     .metric-item {
-        border-bottom: none; /* ลบเส้นแบ่งแนวนอนเดิม */
+        border-bottom: none; 
         padding: 10px;
-        background-color: #f8f9fa; /* ใส่พื้นหลังจางๆ ให้ดูเป็นสัดส่วน */
+        background-color: #f8f9fa; 
         border-radius: 8px;
     }
 
     .metric-value {
-        font-size: 1.6em; /* ลดขนาดตัวเลขลงหน่อยไม่ให้ล้น */
+        font-size: 1.6em; 
     }
 
     /* 6. Chart: ให้ความสูงพอดีๆ */
@@ -995,7 +1029,7 @@ tbody tr:last-child td { border-bottom: none; }
         min-height: 320px;
     }
     
-    /* 7. ปุ่มกด: เรียงแนวนอนคู่กัน (ถ้าจอพอ) หรือตั้ง (ถ้าจอเล็กมาก) */
+    /* 7. ปุ่มกด */
     .action-buttons-container {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -1003,7 +1037,7 @@ tbody tr:last-child td { border-bottom: none; }
     }
 }
 
-/* มือถือจอเล็กมาก (iPhone SE, Small Android) */
+/* มือถือจอเล็กมาก */
 @media (max-width: 480px) {
     .status-widget .status-metrics {
         grid-template-columns: 1fr; /* เรียงตั้ง */
@@ -1017,6 +1051,7 @@ tbody tr:last-child td { border-bottom: none; }
         font-size: 1.4rem;
     }
 }
+
 /* =========================================
    Collapsible Details & Image Lightbox
    ========================================= */
@@ -1029,7 +1064,7 @@ tbody tr:last-child td { border-bottom: none; }
     opacity: 0;
 }
 .collapsible-content.show {
-    max-height: 500px; /* ความสูงเผื่อให้แผนที่และข้อมูล */
+    max-height: 500px; 
     opacity: 1;
 }
 
