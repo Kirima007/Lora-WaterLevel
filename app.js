@@ -171,6 +171,47 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         }
+        // --- ส่วนที่ 3: จัดการปุ่มกรองเวลากราฟ (Time Filter) ---
+        const timeBtns = document.querySelectorAll('.time-filter-btn');
+        timeBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                // ลบสีปุ่มเก่า แล้วไฮไลต์ปุ่มที่ถูกกด
+                timeBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                if (!waterChartManager || !waterChartManager.chart) return;
+                
+                const range = btn.dataset.range;
+                const latestTime = allData.length > 0 ? allData[0].timestamp : Date.now();
+                let startTime = null;
+                
+                // คำนวณเวลาย้อนหลัง
+                switch(range) {
+                    case '6h': startTime = latestTime - (6 * 60 * 60 * 1000); break;
+                    case '24h': startTime = latestTime - (24 * 60 * 60 * 1000); break;
+                    case '7d': startTime = latestTime - (7 * 24 * 60 * 60 * 1000); break;
+                    case '1m': startTime = latestTime - (30 * 24 * 60 * 60 * 1000); break;
+                    case '6m': startTime = latestTime - (180 * 24 * 60 * 60 * 1000); break;
+                    case '1y': startTime = latestTime - (365 * 24 * 60 * 60 * 1000); break;
+                    case 'all': startTime = null; break;
+                }
+                
+                // สั่งกราฟซูม (Dispatch Action ไปที่ ECharts)
+                if (startTime) {
+                    waterChartManager.chart.dispatchAction({
+                        type: 'dataZoom',
+                        startValue: startTime,
+                        endValue: latestTime
+                    });
+                } else {
+                    waterChartManager.chart.dispatchAction({
+                        type: 'dataZoom',
+                        start: 0,
+                        end: 100 // คืนค่าเริ่มต้น (ซูมดูทั้งหมด)
+                    });
+                }
+            });
+        });
     }
 
     async function fetchSheetData(baseUrl, sheetName, query) {
@@ -333,173 +374,148 @@ document.addEventListener('DOMContentLoaded', () => {
         return { label: "ปกติ", color: "var(--normal-color)", className: "normal" };
     }
 
+    // =========================================
+    // คลาสจัดการกราฟน้ำ (Apache ECharts) - ล็อกแกน Y และแถบสีเต็ม
+    // =========================================
     class WaterChartManager {
         constructor(container) {
             this.container = container;
             this.chart = null;
+            this.resizeHandler = () => { if (this.chart) this.chart.resize(); };
+            window.addEventListener('resize', this.resizeHandler);
         }
 
         create(data, floodedThreshold, droughtThreshold) {
-            this.destroy();
+            this.chart = echarts.init(this.container);
+            
             const style = getComputedStyle(document.documentElement);
-            const cHigh = style.getPropertyValue('--high-color').trim() || '#dc3545';
-            const cLow = style.getPropertyValue('--low-color').trim() || '#ffc107';
             const cAccent = style.getPropertyValue('--accent-color').trim() || '#F58220';
+            const cHigh = style.getPropertyValue('--high-color').trim() || '#dc3545';
+            const cNormal = style.getPropertyValue('--normal-color').trim() || '#28a745';
+            const cLow = style.getPropertyValue('--low-color').trim() || '#ffc107';
 
-            // เช็คว่าเป็นหน้าจอมือถือหรือไม่
-            const isMobile = window.innerWidth <= 768;
-
-            const options = {
-                chart: {
-                    type: 'area',
-                    height: '100%',
-                    fontFamily: 'Prompt, sans-serif',
-                    background: 'transparent',
-                    toolbar: {
-                        show: !isMobile, // ซ่อน Toolbar บนมือถือเพื่อความสะอาดตา
-                        tools: { download: false }
-                    },
-                    zoom: {
-                        enabled: !isMobile // *** สำคัญ: ปิด Zoom บนมือถือเพื่อให้ Scroll หน้าเว็บได้ไม่ติดขัด
-                    },
-                    animations: { enabled: false }, // ปิด Animation บนมือถือเพื่อ Performance
-                    dropShadow: { enabled: true, top: 4, left: 0, blur: 4, opacity: 0.15 }
-                },
-                colors: [cAccent],
-                series: [{ name: 'ระดับน้ำ', data: data }],
-                dataLabels: { enabled: false },
-                stroke: { curve: 'smooth', width: 2.5, lineCap: 'round' },
-
-                fill: {
-                    type: "gradient",
-                    gradient: { shade: 'light', shadeIntensity: 0.5, opacityFrom: 0.7, opacityTo: 0.2, stops: [0, 90, 100] }
-                },
-
-                // ลดขนาดจุด (Marker) บนมือถือ
-                markers: {
-                    size: 0,
-                    strokeColors: '#fff',
-                    strokeWidth: 2,
-                    hover: { size: isMobile ? 0 : 6, sizeOffset: 3 }
-                },
-
+            const option = {
+                grid: { top: 40, right: 40, bottom: 65, left: 45 },
                 tooltip: {
-                    theme: 'light',
-                    // บนมือถือ Tooltip จะติดตามนิ้วได้ดีขึ้นถ้า fixed
-                    fixed: {
-                        enabled: false,
-                        position: 'topRight'
-                    },
-                    x: {
-                        formatter: function (val) {
-                            return new Date(val).toLocaleString('th-TH', {
-                                day: 'numeric', month: 'short',
-                                hour: '2-digit', minute: '2-digit'
-                            });
-                        }
-                    },
-                    y: { formatter: val => val.toFixed(2) + " ม." }
-                },
-
-                xaxis: {
-                    type: 'datetime',
-                    tooltip: { enabled: false },
-                    axisBorder: { show: false },
-                    axisTicks: { show: false },
-                    crosshairs: { show: true, stroke: { color: '#b6b6b6', dashArray: 3 } },
-                    tickAmount: isMobile ? 3 : 6, // ลดจำนวนขีดวันที่บนแกน X สำหรับมือถือ
-                    labels: {
-                        datetimeUTC: false,
-                        style: { colors: '#999', fontFamily: 'Prompt, sans-serif' },
-                        datetimeFormatter: {
-                            year: 'yyyy',
-                            month: 'MM/yyyy',
-                            day: 'dd/MM',     // ย่อรูปแบบวันที่บนมือถือ
-                            hour: 'HH:mm'
-                        }
+                    trigger: 'axis',
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                    borderColor: '#ddd',
+                    textStyle: { fontFamily: 'Prompt, sans-serif' },
+                    formatter: function (params) {
+                        const date = new Date(params[0].value[0]);
+                        const height = params[0].value[1].toFixed(2);
+                        
+                        let status = 'ปกติ';
+                        let color = cNormal;
+                        if (height > floodedThreshold) { status = 'น้ำท่วม'; color = cHigh; }
+                        else if (height < droughtThreshold) { status = 'น้ำแห้ง'; color = cLow; }
+                        
+                        return `
+                            <div style="font-family: 'Prompt', sans-serif;">
+                                <strong style="color: #666; font-size: 0.9em;">${date.toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' })}</strong><br/>
+                                ระดับน้ำ: <span style="color: ${cAccent}; font-weight: bold; font-size: 1.1em;">${height} ม.</span><br/>
+                                สถานะ: <span style="color: ${color}; font-weight: bold;">${status}</span>
+                            </div>
+                        `;
                     }
                 },
-
-                yaxis: {
-                    min: 0, max: config.maxHeight,
-                    tickAmount: 5,
-                    labels: {
-                        style: { colors: '#999', fontFamily: 'Prompt, sans-serif' },
-                        formatter: val => val.toFixed(1)
+                dataZoom: [
+                    { type: 'inside' },
+                    { 
+                        type: 'slider', bottom: 10, height: 25,
+                        borderColor: 'transparent', backgroundColor: '#f4f4f4',
+                        fillerColor: 'rgba(245, 130, 32, 0.2)', handleStyle: { color: cAccent },
+                        textStyle: { fontFamily: 'Prompt, sans-serif', color: '#666' }
                     }
+                ],
+                xAxis: {
+                    type: 'time',
+                    axisLabel: { fontFamily: 'Prompt, sans-serif', color: '#999', formatter: { year: '{yyyy}', month: '{MMM}', day: '{d} {MMM}', hour: '{HH}:{mm}' } },
+                    splitLine: { show: false }, axisLine: { lineStyle: { color: '#ddd' } }
                 },
-                grid: {
-                    borderColor: 'rgba(0,0,0,0.06)',
-                    strokeDashArray: 4,
-                    padding: { right: isMobile ? 0 : 20, left: 10 } // ปรับ Padding
+                yAxis: {
+                    type: 'value', 
+                    min: 0, 
+                    max: config.maxHeight, // 👉 ล็อกแกน Y ให้คงที่เหมือนเดิม
+                    axisLabel: { fontFamily: 'Prompt, sans-serif', color: '#999' },
+                    splitLine: { lineStyle: { type: 'dashed', color: '#eee' } }
                 },
-
-                annotations: {
-                    // ... (ใช้ Code Annotation เดิมของคุณได้เลยครับ ไม่ต้องแก้) ...
-                    yaxis: [
-                        { y: floodedThreshold, y2: config.maxHeight, fillColor: cHigh, opacity: 0.08 },
-                        {
-                            y: floodedThreshold, borderColor: cHigh,
-                            label: {
-                                text: 'น้ำท่วม',
-                                position: 'right', textAnchor: 'end', offsetX: 0, offsetY: -10, borderRadius: 4, borderColor: cHigh,
-                                style: { color: '#fff', background: cHigh, fontSize: '12px', fontWeight: 600, fontFamily: 'Prompt, sans-serif', padding: { left: 8, right: 8, top: 2, bottom: 2 } }
-                            }
-                        },
-                        { y: 0, y2: droughtThreshold, fillColor: cLow, opacity: 0.12 },
-                        {
-                            y: droughtThreshold, borderColor: cLow,
-                            label: {
-                                text: 'น้ำแห้ง',
-                                position: 'right', textAnchor: 'end', offsetX: 0, offsetY: 10, borderRadius: 4, borderColor: cLow,
-                                style: { color: '#333', background: cLow, fontSize: '12px', fontWeight: 600, fontFamily: 'Prompt, sans-serif', padding: { left: 8, right: 8, top: 2, bottom: 2 } }
-                            }
-                        }
-                    ]
-                }
+                series: [{
+                    name: 'ระดับน้ำ', type: 'line', data: [],
+                    smooth: true, 
+                    symbol: 'none',
+                    lineStyle: { width: 2.5 },
+                    itemStyle: { color: cAccent },
+                    areaStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: 'rgba(245, 130, 32, 0.4)' },
+                            { offset: 1, color: 'rgba(245, 130, 32, 0.05)' }
+                        ])
+                    }
+                }]
             };
-            this.chart = new ApexCharts(this.container, options);
-            this.chart.render();
+
+            this.chart.setOption(option);
+            this.update(data, floodedThreshold, droughtThreshold);
         }
 
         update(data, floodedThreshold, droughtThreshold) {
-        if (!this.chart) return;
-        const style = getComputedStyle(document.documentElement);
-        const cHigh = style.getPropertyValue('--high-color').trim() || '#dc3545';
-        const cLow = style.getPropertyValue('--low-color').trim() || '#ffc107';
+            if (!this.chart) return;
 
-        this.chart.updateOptions({
-            series: [{ data: data }],
-            yaxis: { 
-                min: 0, // 👉 [เพิ่มตรงนี้!] ล็อกแกน Y ให้เริ่มที่ 0 เสมอ
-                max: config.maxHeight 
-            },
-            annotations: {
-                yaxis: [
-                    { y: floodedThreshold, y2: config.maxHeight, fillColor: cHigh, opacity: 0.08 },
-                    {
-                        y: floodedThreshold, borderColor: cHigh,
-                        label: {
-                            text: 'น้ำท่วม',
-                            position: 'right', textAnchor: 'end', offsetX: 0, offsetY: -10, borderRadius: 4, borderColor: cHigh,
-                            style: { color: '#fff', background: cHigh, fontSize: '12px', fontWeight: 600, fontFamily: 'Prompt, sans-serif', padding: { left: 8, right: 8, top: 2, bottom: 2 } }
-                        }
+            const style = getComputedStyle(document.documentElement);
+            const cHigh = style.getPropertyValue('--high-color').trim() || '#dc3545';
+            const cLow = style.getPropertyValue('--low-color').trim() || '#ffc107';
+
+            const chartData = data.map(d => [d.x, d.y]);
+
+            const option = {
+                yAxis: { min: 0, max: config.maxHeight }, // 👉 บังคับล็อกแกน Y อีกรอบตอนอัปเดตข้อมูล
+                series: [{
+                    data: chartData,
+                    markLine: {
+                        silent: true, 
+                        symbol: ['none', 'none'],
+                        data: [
+                            { 
+                                yAxis: floodedThreshold, 
+                                lineStyle: { color: cHigh, type: 'dashed', width: 1.5 }, 
+                                label: { formatter: ' น้ำท่วม ', position: 'insideEndTop', backgroundColor: cHigh, color: '#fff', padding: [3, 6], borderRadius: 4, fontFamily: 'Prompt, sans-serif', fontSize: 11 } 
+                            },
+                            { 
+                                yAxis: droughtThreshold, 
+                                lineStyle: { color: cLow, type: 'dashed', width: 1.5 }, 
+                                label: { formatter: ' น้ำแห้ง ', position: 'insideEndBottom', backgroundColor: cLow, color: '#333', padding: [3, 6], borderRadius: 4, fontFamily: 'Prompt, sans-serif', fontSize: 11 } 
+                            }
+                        ]
                     },
-                    { y: 0, y2: droughtThreshold, fillColor: cLow, opacity: 0.12 },
-                    {
-                        y: droughtThreshold, borderColor: cLow,
-                        label: {
-                            text: 'น้ำแห้ง',
-                            position: 'right', textAnchor: 'end', offsetX: 0, offsetY: 10, borderRadius: 4, borderColor: cLow,
-                            style: { color: '#333', background: cLow, fontSize: '12px', fontWeight: 600, fontFamily: 'Prompt, sans-serif', padding: { left: 8, right: 8, top: 2, bottom: 2 } }
-                        }
+                    markArea: {
+                        silent: true,
+                        data: [
+                            // 👉 ใช้ config.maxHeight แทน 'max' ทำให้แถบสีแดงเต็มกรอบ 100% แน่นอน
+                            [
+                                { yAxis: floodedThreshold, itemStyle: { color: cHigh, opacity: 0.1 } },
+                                { yAxis: config.maxHeight } 
+                            ],
+                            // แถบสีเหลือง
+                            [
+                                { yAxis: 0, itemStyle: { color: cLow, opacity: 0.15 } },
+                                { yAxis: droughtThreshold }
+                            ]
+                        ]
                     }
-                ]
-            }
-        });
-    }
+                }]
+            };
 
-        destroy() { if (this.chart) this.chart.destroy(); }
+            this.chart.setOption(option);
+        }
+
+        destroy() {
+            if (this.chart) {
+                window.removeEventListener('resize', this.resizeHandler);
+                this.chart.dispose();
+                this.chart = null;
+            }
+        }
     }
 
     // --- INSIGHTS MODAL FUNCTIONS (4 Rows Layout) ---

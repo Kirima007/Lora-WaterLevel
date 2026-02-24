@@ -989,20 +989,33 @@ tbody tr:last-child td { border-bottom: none; }
         margin-bottom: 0;   
     }
 
-    /* 4. Header */
+    /* 4. Header (ปรับใหม่ให้เป็นแนวนอน ไม่หนา) */
     .header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 15px;
-        padding: 20px;
+        flex-direction: row; /* กลับมาเรียงแนวนอน */
+        align-items: center;
+        gap: 10px;
+        padding: 12px 15px; /* ลด padding เพื่อลดความหนาของแถบส้ม */
     }
     
+    .header-left {
+        gap: 10px; /* ลดระยะห่างปุ่มกลับ กับ ชื่อบ่อ */
+        flex-grow: 1; /* ให้ดันพื้นที่ไอคอนไปขวาสุด */
+        width: calc(100% - 40px); /* เผื่อที่ให้ไอคอนด้านขวา */
+    }
+
     .header-right {
-        width: 100%;
-        display: flex;
-        justify-content: flex-end; 
-        border-top: 1px solid rgba(255,255,255,0.2); 
-        padding-top: 10px;
+        width: auto;
+        display: block;
+        border-top: none; /* เอาเส้นคั่นจางๆ ออก */
+        padding-top: 0;
+    }
+
+    .header h1 {
+        font-size: 1.25rem; /* ลดขนาดฟอนต์ชื่อบ่อ */
+        margin: 0;
+        white-space: nowrap; /* บังคับไม่ให้ตัดขึ้นบรรทัดใหม่ */
+        overflow: hidden; /* ซ่อนข้อความที่ล้น */
+        text-overflow: ellipsis; /* ใส่ ... ถ้าชื่อยาวเกินไป */
     }
 
     /* 5. กล่องสถานะ (Level/Percent) */
@@ -1048,7 +1061,12 @@ tbody tr:last-child td { border-bottom: none; }
     }
     
     .header h1 {
-        font-size: 1.4rem;
+        font-size: 1.1rem; /* ลดขนาดชื่อบ่อลงอีกนิดบนจอเล็กสุด */
+    }
+
+    .back-button {
+        font-size: 0.85em;
+        white-space: nowrap; /* บังคับให้ปุ่ม "กลับหน้าหลัก" อยู่บรรทัดเดียวเสมอ */
     }
 }
 
@@ -1180,4 +1198,94 @@ tbody tr:last-child td { border-bottom: none; }
     transform: translateY(-4px) scale(1.01);
     box-shadow: 0 8px 20px rgba(0,0,0,0.08);
     border-color: var(--accent-color);
+}
+
+/* ============================================
+   MOBILE & iPAD UI/UX OPTIMIZATION
+   ============================================ */
+
+/* 1. แก้ปัญหาแถบ URL บัง UI ด้านล่างบนมือถือ */
+.overview-page-container {
+    height: 100dvh; /* ใช้ dvh (Dynamic Viewport Height) */
+}
+
+/* 2. ทำให้ตารางสามารถใช้มือปัดเลื่อนซ้าย-ขวาได้ (Swipeable Table) */
+.table-container { 
+    overflow-x: auto; 
+    -webkit-overflow-scrolling: touch; /* ปัดลื่นๆ สไตล์ iOS */
+    padding-bottom: 5px;
+}
+.table-widget table {
+    min-width: 450px; /* บังคับขนาดขั้นต่ำ ไม่ให้คอลัมน์บีบจนตัวหนังสือตกบรรทัด */
+}
+
+/* 3. ขยายขนาดปุ่มให้เหมาะกับนิ้วมือ (Touch Targets) */
+.action-btn {
+    min-height: 48px; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.close-button, .lightbox-close {
+    padding: 10px; /* ขยายพื้นที่รับสัมผัสรอบๆ ปุ่ม X */
+}
+
+/* 4. ปรับรายละเอียดระยะห่างบนจอ iPad และมือถือ (<= 1024px) */
+@media (max-width: 1024px) {
+    .widget {
+        padding: 15px; /* ลด Padding ให้มีพื้นที่แสดงเนื้อหามากขึ้น */
+    }
+    .header h1 {
+        font-size: 1.5rem;
+    }
+    .metric-value {
+        font-size: 1.5em; /* ลดขนาดตัวเลขระดับน้ำไม่ให้ล้นกรอบ */
+    }
+    .insights-grid {
+        gap: 15px; /* ลดช่องว่างในหน้าต่างข้อมูลเชิงลึก */
+    }
+    /* จัดการให้หัวข้อ Dropdown ข้อมูลบ่อมีพื้นที่กดง่ายขึ้น */
+    .details-header {
+        padding: 12px 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .header-left { gap: 10px; }
+    .back-button { font-size: 0.9em; }
+    .header-icon svg { width: 20px; height: 20px; }
+}
+
+/* =========================================
+   Chart Time Filter Buttons (ตัวกรองเวลา)
+   ========================================= */
+.chart-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.time-filter-btn {
+    background-color: var(--widget-bg-color);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-family: 'Prompt', sans-serif;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.time-filter-btn:hover {
+    border-color: var(--accent-color);
+    color: var(--accent-color);
+}
+
+.time-filter-btn.active {
+    background-color: var(--accent-color);
+    color: #ffffff;
+    border-color: var(--accent-color);
+    font-weight: 600;
 }

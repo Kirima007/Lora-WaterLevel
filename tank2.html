@@ -7,7 +7,7 @@
     <title>บ่อโรงอาหาร A</title>
     <link rel="icon" type="image/png" href="Web-icon.png">
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -78,8 +78,19 @@
 
             <div class="main-column">
                 <div class="widget chart-widget">
-                    <h3>กราฟแสดงระดับน้ำ</h3>
-                    <div id="waterChart"></div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                        <h3 style="margin-bottom: 0;">กราฟแสดงระดับน้ำ</h3>
+                        <div class="chart-controls">
+                            <button class="time-filter-btn" data-range="6h">6 ชม.</button>
+                            <button class="time-filter-btn" data-range="24h">24 ชม.</button>
+                            <button class="time-filter-btn" data-range="7d">7 วัน</button>
+                            <button class="time-filter-btn" data-range="1m">1 เดือน</button>
+                            <button class="time-filter-btn" data-range="6m">6 เดือน</button>
+                            <button class="time-filter-btn" data-range="1y">1 ปี</button>
+                            <button class="time-filter-btn active" data-range="all">ทั้งหมด</button>
+                        </div>
+                    </div>
+                    <div id="waterChart" style="min-height: 400px; width: 100%;"></div>
                 </div>
 
                 <div class="widget table-widget">
