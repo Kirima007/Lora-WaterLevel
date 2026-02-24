@@ -228,11 +228,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (allData.length === 0) return;
         updateLatestInfo(allData[0]);
         elements.dataTableBody.innerHTML = '';
-
+        
         // ส่ง index และ array เต็มไปให้ appendTableRow เพื่อคำนวณ Trend
         allData.slice(0, 50).forEach((row, index) => appendTableRow(row, index, allData));
-
-        const chartData = [...allData].reverse().map(d => ({ x: new Date(d.timestamp), y: d.height }));
+        
+        // 👉 [แก้ไขตรงนี้] ใช้ d.timestamp ที่เป็นตัวเลขตรงๆ กราฟจะเสถียรกว่าและไม่ขยับคลาดเคลื่อน
+        const chartData = [...allData].reverse().map(d => ({ x: d.timestamp, y: d.height }));
+        
         if (!waterChartManager) {
             waterChartManager = new WaterChartManager(elements.waterChart);
             waterChartManager.create(chartData, config.floodedThreshold, config.droughtThreshold);
@@ -461,38 +463,41 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         update(data, floodedThreshold, droughtThreshold) {
-            if (!this.chart) return;
-            const style = getComputedStyle(document.documentElement);
-            const cHigh = style.getPropertyValue('--high-color').trim() || '#dc3545';
-            const cLow = style.getPropertyValue('--low-color').trim() || '#ffc107';
+        if (!this.chart) return;
+        const style = getComputedStyle(document.documentElement);
+        const cHigh = style.getPropertyValue('--high-color').trim() || '#dc3545';
+        const cLow = style.getPropertyValue('--low-color').trim() || '#ffc107';
 
-            this.chart.updateSeries([{ data: data }]);
-            this.chart.updateOptions({
-                yaxis: { max: config.maxHeight },
-                annotations: {
-                    yaxis: [
-                        { y: floodedThreshold, y2: config.maxHeight, fillColor: cHigh, opacity: 0.08 },
-                        {
-                            y: floodedThreshold, borderColor: cHigh,
-                            label: {
-                                text: 'น้ำท่วม',
-                                position: 'right', textAnchor: 'end', offsetX: 0, offsetY: -10, borderRadius: 4, borderColor: cHigh,
-                                style: { color: '#fff', background: cHigh, fontSize: '12px', fontWeight: 600, fontFamily: 'Prompt, sans-serif', padding: { left: 8, right: 8, top: 2, bottom: 2 } }
-                            }
-                        },
-                        { y: 0, y2: droughtThreshold, fillColor: cLow, opacity: 0.12 },
-                        {
-                            y: droughtThreshold, borderColor: cLow,
-                            label: {
-                                text: 'น้ำแห้ง',
-                                position: 'right', textAnchor: 'end', offsetX: 0, offsetY: 10, borderRadius: 4, borderColor: cLow,
-                                style: { color: '#333', background: cLow, fontSize: '12px', fontWeight: 600, fontFamily: 'Prompt, sans-serif', padding: { left: 8, right: 8, top: 2, bottom: 2 } }
-                            }
+        this.chart.updateOptions({
+            series: [{ data: data }],
+            yaxis: { 
+                min: 0, // 👉 [เพิ่มตรงนี้!] ล็อกแกน Y ให้เริ่มที่ 0 เสมอ
+                max: config.maxHeight 
+            },
+            annotations: {
+                yaxis: [
+                    { y: floodedThreshold, y2: config.maxHeight, fillColor: cHigh, opacity: 0.08 },
+                    {
+                        y: floodedThreshold, borderColor: cHigh,
+                        label: {
+                            text: 'น้ำท่วม',
+                            position: 'right', textAnchor: 'end', offsetX: 0, offsetY: -10, borderRadius: 4, borderColor: cHigh,
+                            style: { color: '#fff', background: cHigh, fontSize: '12px', fontWeight: 600, fontFamily: 'Prompt, sans-serif', padding: { left: 8, right: 8, top: 2, bottom: 2 } }
                         }
-                    ]
-                }
-            });
-        }
+                    },
+                    { y: 0, y2: droughtThreshold, fillColor: cLow, opacity: 0.12 },
+                    {
+                        y: droughtThreshold, borderColor: cLow,
+                        label: {
+                            text: 'น้ำแห้ง',
+                            position: 'right', textAnchor: 'end', offsetX: 0, offsetY: 10, borderRadius: 4, borderColor: cLow,
+                            style: { color: '#333', background: cLow, fontSize: '12px', fontWeight: 600, fontFamily: 'Prompt, sans-serif', padding: { left: 8, right: 8, top: 2, bottom: 2 } }
+                        }
+                    }
+                ]
+            }
+        });
+    }
 
         destroy() { if (this.chart) this.chart.destroy(); }
     }
