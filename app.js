@@ -297,10 +297,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const prevRow = fullData[index + 1];
             const diff = row.height - prevRow.height;
 
+            // --- แก้ไขจุดที่ 1 ในฟังก์ชัน appendTableRow ---
             if (diff > 0.005) {
-                trendHTML = `<span style="font-size: 0.8em; color: var(--high-color); margin-left: 5px;" title="กำลังเพิ่มขึ้น">(+${diff.toFixed(2)}) ↗</span>`;
+                trendHTML = `<span style="font-size: 0.8em; color: var(--high-color); margin-left: 5px;" title="กำลังเพิ่มขึ้น">(+${diff.toFixed(2)}) ↗&#xFE0E;</span>`;
             } else if (diff < -0.005) {
-                trendHTML = `<span style="font-size: 0.8em; color: var(--normal-color); margin-left: 5px;" title="กำลังลดลง">(${diff.toFixed(2)}) ↘</span>`;
+                trendHTML = `<span style="font-size: 0.8em; color: var(--normal-color); margin-left: 5px;" title="กำลังลดลง">(${diff.toFixed(2)}) ↘&#xFE0E;</span>`;
             }
         }
 
@@ -362,10 +363,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const prevHeight = allData[1].height;
             const diff = height - prevHeight;
 
+            // --- แก้ไขจุดที่ 2 ในฟังก์ชัน updateLatestInfo ---
             if (diff > 0.005) {
-                topTrendIcon.innerHTML = `<span style="color: var(--high-color);">↗ (+${diff.toFixed(2)})</span>`;
+                topTrendIcon.innerHTML = `<span style="color: var(--high-color);">↗&#xFE0E; (+${diff.toFixed(2)})</span>`;
             } else if (diff < -0.005) {
-                topTrendIcon.innerHTML = `<span style="color: var(--normal-color);">↘ (${diff.toFixed(2)})</span>`;
+                topTrendIcon.innerHTML = `<span style="color: var(--normal-color);">↘&#xFE0E; (${diff.toFixed(2)})</span>`;
             } else {
                 topTrendIcon.innerHTML = `<span style="color: #ccc; font-weight: normal;">- (ทรงตัว)</span>`;
             }
@@ -571,14 +573,19 @@ document.addEventListener('DOMContentLoaded', () => {
             rateOfRise = (latestPoint.height - oldestPoint.height) / timeDiffHours;
         }
 
-        let trendIcon = '↔';
+        // --- แก้ไขจุดที่ 3 ในฟังก์ชัน showInsightsPopup ---
+        let trendIcon = '↔&#xFE0E;'; // แก้ไขสัญลักษณ์ทรงตัว
         let trendText = 'ทรงตัว';
         let trendColor = 'var(--text-secondary)';
 
         if (rateOfRise > 0.01) {
-            trendIcon = '↑'; trendText = 'กำลังเพิ่มขึ้น'; trendColor = 'var(--high-color)';
+            trendIcon = '↑&#xFE0E;'; // แก้ไขสัญลักษณ์เพิ่มขึ้น
+            trendText = 'กำลังเพิ่มขึ้น';
+            trendColor = 'var(--high-color)';
         } else if (rateOfRise < -0.01) {
-            trendIcon = '↓'; trendText = 'กำลังลดลง'; trendColor = 'var(--normal-color)';
+            trendIcon = '↓&#xFE0E;'; // แก้ไขสัญลักษณ์ลดลง
+            trendText = 'กำลังลดลง';
+            trendColor = 'var(--normal-color)';
         }
 
         // --- คำนวณ Duration (ท่วม/แล้ง) ---
