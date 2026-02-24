@@ -1128,3 +1128,56 @@ tbody tr:last-child td { border-bottom: none; }
 .lightbox-close:hover {
     color: var(--accent-color);
 }
+
+/* =========================================
+   หน้าแรก: Premium Animations (แก้แล็กแผนที่ 100%)
+   ========================================= */
+
+/* 1. กล่องนอกสุด: ให้แค่เฟดอินขึ้นมา (ไม่ใช้ transform แล้วจะได้ไม่ตีกับระบบแผนที่) */
+.leaflet-popup {
+    animation: fadePopup 0.2s ease-out;
+}
+
+/* 2. ไส้ใน: เอาเอฟเฟกต์ซูมเด้งมาใส่ตรงนี้แทน ลื่นแน่นอน */
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip-container {
+    animation: bounceInnerPopup 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.2);
+    will-change: transform;
+    transform-origin: bottom center; /* ให้จุดเด้งเริ่มจากตรงลูกศรชี้หมุดพอดี */
+}
+
+@keyframes fadePopup {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+@keyframes bounceInnerPopup {
+    0% { transform: scale(0.7); }
+    100% { transform: scale(1); }
+}
+
+/* 3. ส่วนของการ์ดด้านซ้าย (คงของเดิมไว้ได้เลย) */
+.overview-card {
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.2), 
+                box-shadow 0.3s ease, 
+                border-color 0.3s ease;
+    will-change: transform, opacity;
+    animation: slideUpCard 0.4s ease-out backwards;
+}
+
+.overview-card:nth-child(1) { animation-delay: 0.05s; }
+.overview-card:nth-child(2) { animation-delay: 0.1s; }
+.overview-card:nth-child(3) { animation-delay: 0.15s; }
+.overview-card:nth-child(4) { animation-delay: 0.2s; }
+.overview-card:nth-child(5) { animation-delay: 0.25s; }
+
+@keyframes slideUpCard {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.overview-card:hover {
+    transform: translateY(-4px) scale(1.01);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    border-color: var(--accent-color);
+}
