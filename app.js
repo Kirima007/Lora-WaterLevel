@@ -1,12 +1,12 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     let TANK_CONFIG = {};
-    let config = {}; 
+    let config = {};
 
     // --- DOM ELEMENTS ---
     const body = document.body;
     const tankId = body.dataset.tankId;
-    
+
     const statusBanner = document.createElement('div');
     statusBanner.id = 'connectionStatus';
     document.body.prepend(statusBanner);
@@ -53,12 +53,12 @@ document.addEventListener('DOMContentLoaded', () => {
             // 2. Setup System
             setupPageInfo();
             setupEventListeners();
-            
+
             window.addEventListener('online', updateOnlineStatus);
             window.addEventListener('offline', updateOnlineStatus);
 
-            await loadData(); 
-            setInterval(loadData, 300000); 
+            await loadData();
+            setInterval(loadData, 300000);
 
         } catch (e) {
             showError('Critical Error: ' + e.message);
@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.googleSheetLink.href = config.sheetUrl.replace('/gviz/tq?', '');
         updateTankDetails();
     }
-    
+
     function updateTankDetails() {
         const mapUrl = `https://maps.google.com/maps?q=${config.latitude},${config.longitude}&hl=th&z=17&output=embed`;
 
@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateOnlineStatus() {
         if (navigator.onLine) {
             elements.connectionStatus.style.display = 'none';
-            loadData(); 
+            loadData();
         } else {
             showError('ขาดการเชื่อมต่ออินเทอร์เน็ต');
         }
@@ -98,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function toggleSkeleton(isLoading) {
         const targets = [
-            elements.currentHeight, elements.currentPercent, 
+            elements.currentHeight, elements.currentPercent,
             elements.alertBox, elements.lastUpdated
         ];
         if (isLoading) {
@@ -115,8 +115,8 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.connectionStatus.className = 'status-offline';
         elements.connectionStatus.style.display = 'block';
         if (allData.length === 0) {
-             elements.dataTableBody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: red;">${message}</td></tr>`;
-             toggleSkeleton(false);
+            elements.dataTableBody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: red;">${message}</td></tr>`;
+            toggleSkeleton(false);
         }
     }
 
@@ -129,6 +129,48 @@ document.addEventListener('DOMContentLoaded', () => {
         window.addEventListener('click', (event) => {
             if (event.target == elements.insightsModal) hideInsightsPopup();
         });
+
+        // --- ส่วนที่ 1: จัดการเปิด/ปิด ข้อมูลบ่อและแผนที่ ---
+        const toggleDetailsBtn = document.getElementById('toggleDetailsBtn');
+        const tankDetailsContainer = document.getElementById('tankDetailsContainer');
+        const detailsIcon = document.getElementById('detailsIcon');
+
+        if (toggleDetailsBtn && tankDetailsContainer) {
+            toggleDetailsBtn.addEventListener('click', () => {
+                tankDetailsContainer.classList.toggle('show');
+                if (tankDetailsContainer.classList.contains('show')) {
+                    detailsIcon.style.transform = 'rotate(180deg)';
+                } else {
+                    detailsIcon.style.transform = 'rotate(0deg)';
+                }
+            });
+        }
+
+        // --- ส่วนที่ 2: จัดการขยายรูประบบ (Lightbox) ---
+        const deviceImg = document.getElementById('deviceImg');
+        const lightbox = document.getElementById('imageLightbox');
+        const expandedImg = document.getElementById('expandedImg');
+        const closeLightboxBtn = document.getElementById('closeLightbox');
+
+        if (deviceImg && lightbox && expandedImg && closeLightboxBtn) {
+            // กดรูปเพื่อขยาย
+            deviceImg.addEventListener('click', () => {
+                expandedImg.src = deviceImg.src;
+                lightbox.classList.add('show');
+            });
+
+            // กด X เพื่อปิด
+            closeLightboxBtn.addEventListener('click', () => {
+                lightbox.classList.remove('show');
+            });
+
+            // กดพื้นหลังดำเพื่อปิด
+            lightbox.addEventListener('click', (e) => {
+                if (e.target === lightbox) {
+                    lightbox.classList.remove('show');
+                }
+            });
+        }
     }
 
     async function fetchSheetData(baseUrl, sheetName, query) {
@@ -155,7 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (!isNaN(newMax)) config.maxHeight = newMax;
                         if (!isNaN(newFlood)) config.floodedThreshold = newFlood;
                         if (!isNaN(newDrought)) config.droughtThreshold = newDrought;
-                        updateTankDetails(); 
+                        updateTankDetails();
                     }
                 } catch (e) { console.warn('โหลด Config ไม่สำเร็จ ใช้ค่าเดิม:', e); }
             }
@@ -169,9 +211,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 return { timestamp, height };
             }).filter(d => d);
             if (newData.length === 0) throw new Error('ไม่พบข้อมูลใน Sheet');
-            allData = newData; 
+            allData = newData;
             render();
-            elements.connectionStatus.style.display = 'none'; 
+            elements.connectionStatus.style.display = 'none';
         } catch (e) {
             console.error('Load Data Error:', e);
             showError('ไม่สามารถโหลดข้อมูลได้: ' + e.message);
@@ -186,10 +228,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (allData.length === 0) return;
         updateLatestInfo(allData[0]);
         elements.dataTableBody.innerHTML = '';
-        
+
         // ส่ง index และ array เต็มไปให้ appendTableRow เพื่อคำนวณ Trend
         allData.slice(0, 50).forEach((row, index) => appendTableRow(row, index, allData));
-        
+
         const chartData = [...allData].reverse().map(d => ({ x: new Date(d.timestamp), y: d.height }));
         if (!waterChartManager) {
             waterChartManager = new WaterChartManager(elements.waterChart);
@@ -203,18 +245,18 @@ document.addEventListener('DOMContentLoaded', () => {
     function appendTableRow(row, index, fullData) {
         const dateObj = new Date(row.timestamp);
         const status = getStatus(row.height);
-        
+
         // คำนวณแนวโน้ม (Trend) เทียบกับข้อมูลก่อนหน้า (index + 1)
         let trendIcon = '<span class="trend-arrow trend-steady" title="ทรงตัว">-</span>';
-        
+
         if (index < fullData.length - 1) {
             const prevRow = fullData[index + 1];
             const diff = row.height - prevRow.height;
-            
+
             // ถ้าต่างกันมากกว่า 0.005 เมตร ให้แสดงลูกศร
-            if (diff > 0.005) { 
+            if (diff > 0.005) {
                 trendIcon = '<span class="trend-arrow trend-up" title="กำลังเพิ่มขึ้น">↗</span>';
-            } else if (diff < -0.005) { 
+            } else if (diff < -0.005) {
                 trendIcon = '<span class="trend-arrow trend-down" title="กำลังลดลง">↘</span>';
             }
         }
@@ -242,23 +284,23 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!data) return;
         const date = new Date(data.timestamp);
         elements.lastUpdated.textContent = `${date.toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' })}`;
-        
+
         const height = data.height;
         // คำนวณเปอร์เซ็นต์ (Limit ไว้ไม่ให้เกิน 0-100)
         let percentage = (height / config.maxHeight) * 100;
-        percentage = Math.max(0, Math.min(100, percentage)); 
+        percentage = Math.max(0, Math.min(100, percentage));
 
         elements.currentHeight.textContent = `${height.toFixed(2)} m`;
         elements.currentPercent.textContent = `${percentage.toFixed(1)} %`;
 
         const status = getStatus(height);
-        
+
         // --- ส่วนที่เพิ่ม: อัปเดต Liquid Gauge ---
         const waveElement = document.getElementById('waveElement');
         if (waveElement) {
             // คำนวณตำแหน่ง Top: 100% คือน้ำแห้ง, 0% คือน้ำเต็ม
             // ต้องชดเชยค่าเล็กน้อยเพราะคลื่นมันหมุน
-            const topPos = 100 - percentage; 
+            const topPos = 100 - percentage;
             waveElement.style.top = `${topPos}%`;
 
             // เปลี่ยนสีน้ำตามสถานะ
@@ -267,16 +309,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         // ------------------------------------
 
-        elements.alertBox.className = 'status-alert'; 
+        elements.alertBox.className = 'status-alert';
         elements.alertBox.classList.add(`alert-${status.className}`);
         const statusEmoji = status.label === "น้ำท่วม" ? "🌊" : status.label === "น้ำแห้ง" ? "☀️" : "💧";
         elements.alertBox.innerHTML = `${statusEmoji} ${status.label}`;
-        
+
         elements.currentHeight.style.color = status.color;
         // ตัวเลข % ในวงกลม ไม่ต้องเปลี่ยนสีตาม status แล้ว เพราะสีน้ำเปลี่ยนแทน
         // elements.currentPercent.style.color = status.color; 
     }
-    
+
     function parseGoogleDate(str) {
         const m = str.match(/Date\((\d+),(\d+),(\d+)(?:,(\d+),(\d+),(\d+))?\)/);
         if (!m) return null;
@@ -290,170 +332,170 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     class WaterChartManager {
-    constructor(container) {
-        this.container = container;
-        this.chart = null;
-    }
+        constructor(container) {
+            this.container = container;
+            this.chart = null;
+        }
 
-    create(data, floodedThreshold, droughtThreshold) {
-        this.destroy();
-        const style = getComputedStyle(document.documentElement);
-        const cHigh = style.getPropertyValue('--high-color').trim() || '#dc3545';
-        const cLow = style.getPropertyValue('--low-color').trim() || '#ffc107';
-        const cAccent = style.getPropertyValue('--accent-color').trim() || '#F58220';
+        create(data, floodedThreshold, droughtThreshold) {
+            this.destroy();
+            const style = getComputedStyle(document.documentElement);
+            const cHigh = style.getPropertyValue('--high-color').trim() || '#dc3545';
+            const cLow = style.getPropertyValue('--low-color').trim() || '#ffc107';
+            const cAccent = style.getPropertyValue('--accent-color').trim() || '#F58220';
 
-        // เช็คว่าเป็นหน้าจอมือถือหรือไม่
-        const isMobile = window.innerWidth <= 768;
+            // เช็คว่าเป็นหน้าจอมือถือหรือไม่
+            const isMobile = window.innerWidth <= 768;
 
-        const options = {
-            chart: {
-                type: 'area',
-                height: '100%',
-                fontFamily: 'Prompt, sans-serif',
-                background: 'transparent',
-                toolbar: { 
-                    show: !isMobile, // ซ่อน Toolbar บนมือถือเพื่อความสะอาดตา
-                    tools: { download: false } 
+            const options = {
+                chart: {
+                    type: 'area',
+                    height: '100%',
+                    fontFamily: 'Prompt, sans-serif',
+                    background: 'transparent',
+                    toolbar: {
+                        show: !isMobile, // ซ่อน Toolbar บนมือถือเพื่อความสะอาดตา
+                        tools: { download: false }
+                    },
+                    zoom: {
+                        enabled: !isMobile // *** สำคัญ: ปิด Zoom บนมือถือเพื่อให้ Scroll หน้าเว็บได้ไม่ติดขัด
+                    },
+                    animations: { enabled: false }, // ปิด Animation บนมือถือเพื่อ Performance
+                    dropShadow: { enabled: true, top: 4, left: 0, blur: 4, opacity: 0.15 }
                 },
-                zoom: { 
-                    enabled: !isMobile // *** สำคัญ: ปิด Zoom บนมือถือเพื่อให้ Scroll หน้าเว็บได้ไม่ติดขัด
+                colors: [cAccent],
+                series: [{ name: 'ระดับน้ำ', data: data }],
+                dataLabels: { enabled: false },
+                stroke: { curve: 'smooth', width: 2.5, lineCap: 'round' },
+
+                fill: {
+                    type: "gradient",
+                    gradient: { shade: 'light', shadeIntensity: 0.5, opacityFrom: 0.7, opacityTo: 0.2, stops: [0, 90, 100] }
                 },
-                animations: { enabled: false }, // ปิด Animation บนมือถือเพื่อ Performance
-                dropShadow: { enabled: true, top: 4, left: 0, blur: 4, opacity: 0.15 }
-            },
-            colors: [cAccent],
-            series: [{ name: 'ระดับน้ำ', data: data }],
-            dataLabels: { enabled: false },
-            stroke: { curve: 'smooth', width: 2.5, lineCap: 'round' },
-            
-            fill: {
-                type: "gradient",
-                gradient: { shade: 'light', shadeIntensity: 0.5, opacityFrom: 0.7, opacityTo: 0.2, stops: [0, 90, 100] }
-            },
-            
-            // ลดขนาดจุด (Marker) บนมือถือ
-            markers: { 
-                size: 0, 
-                strokeColors: '#fff', 
-                strokeWidth: 2, 
-                hover: { size: isMobile ? 0 : 6, sizeOffset: 3 } 
-            },
 
-            tooltip: {
-                theme: 'light',
-                // บนมือถือ Tooltip จะติดตามนิ้วได้ดีขึ้นถ้า fixed
-                fixed: {
-                    enabled: false,
-                    position: 'topRight'
+                // ลดขนาดจุด (Marker) บนมือถือ
+                markers: {
+                    size: 0,
+                    strokeColors: '#fff',
+                    strokeWidth: 2,
+                    hover: { size: isMobile ? 0 : 6, sizeOffset: 3 }
                 },
-                x: {
-                    formatter: function(val) {
-                        return new Date(val).toLocaleString('th-TH', {
-                            day: 'numeric', month: 'short',
-                            hour: '2-digit', minute: '2-digit'
-                        });
-                    }
-                },
-                y: { formatter: val => val.toFixed(2) + " ม." }
-            },
 
-            xaxis: {
-                type: 'datetime',
-                tooltip: { enabled: false },
-                axisBorder: { show: false }, 
-                axisTicks: { show: false },
-                crosshairs: { show: true, stroke: { color: '#b6b6b6', dashArray: 3 } },
-                tickAmount: isMobile ? 3 : 6, // ลดจำนวนขีดวันที่บนแกน X สำหรับมือถือ
-                labels: {
-                    datetimeUTC: false,
-                    style: { colors: '#999', fontFamily: 'Prompt, sans-serif' },
-                    datetimeFormatter: {
-                        year: 'yyyy',
-                        month: 'MM/yyyy',
-                        day: 'dd/MM',     // ย่อรูปแบบวันที่บนมือถือ
-                        hour: 'HH:mm'
-                    }
-                }
-            },
-
-            yaxis: {
-                min: 0, max: config.maxHeight, 
-                tickAmount: 5,
-                labels: { 
-                    style: { colors: '#999', fontFamily: 'Prompt, sans-serif' }, 
-                    formatter: val => val.toFixed(1) 
-                }
-            },
-            grid: { 
-                borderColor: 'rgba(0,0,0,0.06)', 
-                strokeDashArray: 4, 
-                padding: { right: isMobile ? 0 : 20, left: 10 } // ปรับ Padding
-            },
-
-            annotations: {
-                // ... (ใช้ Code Annotation เดิมของคุณได้เลยครับ ไม่ต้องแก้) ...
-                 yaxis: [
-                    { y: floodedThreshold, y2: config.maxHeight, fillColor: cHigh, opacity: 0.08 },
-                    {
-                        y: floodedThreshold, borderColor: cHigh,
-                        label: {
-                            text: 'น้ำท่วม',
-                            position: 'right', textAnchor: 'end', offsetX: 0, offsetY: -10, borderRadius: 4, borderColor: cHigh,
-                            style: { color: '#fff', background: cHigh, fontSize: '12px', fontWeight: 600, fontFamily: 'Prompt, sans-serif', padding: { left: 8, right: 8, top: 2, bottom: 2 } }
+                tooltip: {
+                    theme: 'light',
+                    // บนมือถือ Tooltip จะติดตามนิ้วได้ดีขึ้นถ้า fixed
+                    fixed: {
+                        enabled: false,
+                        position: 'topRight'
+                    },
+                    x: {
+                        formatter: function (val) {
+                            return new Date(val).toLocaleString('th-TH', {
+                                day: 'numeric', month: 'short',
+                                hour: '2-digit', minute: '2-digit'
+                            });
                         }
                     },
-                    { y: 0, y2: droughtThreshold, fillColor: cLow, opacity: 0.12 },
-                    {
-                        y: droughtThreshold, borderColor: cLow,
-                        label: {
-                            text: 'น้ำแห้ง',
-                            position: 'right', textAnchor: 'end', offsetX: 0, offsetY: 10, borderRadius: 4, borderColor: cLow,
-                            style: { color: '#333', background: cLow, fontSize: '12px', fontWeight: 600, fontFamily: 'Prompt, sans-serif', padding: { left: 8, right: 8, top: 2, bottom: 2 } }
+                    y: { formatter: val => val.toFixed(2) + " ม." }
+                },
+
+                xaxis: {
+                    type: 'datetime',
+                    tooltip: { enabled: false },
+                    axisBorder: { show: false },
+                    axisTicks: { show: false },
+                    crosshairs: { show: true, stroke: { color: '#b6b6b6', dashArray: 3 } },
+                    tickAmount: isMobile ? 3 : 6, // ลดจำนวนขีดวันที่บนแกน X สำหรับมือถือ
+                    labels: {
+                        datetimeUTC: false,
+                        style: { colors: '#999', fontFamily: 'Prompt, sans-serif' },
+                        datetimeFormatter: {
+                            year: 'yyyy',
+                            month: 'MM/yyyy',
+                            day: 'dd/MM',     // ย่อรูปแบบวันที่บนมือถือ
+                            hour: 'HH:mm'
                         }
                     }
-                ]
-            }
-        };
-        this.chart = new ApexCharts(this.container, options);
-        this.chart.render();
-    }
+                },
 
-    update(data, floodedThreshold, droughtThreshold) {
-        if (!this.chart) return;
-        const style = getComputedStyle(document.documentElement);
-        const cHigh = style.getPropertyValue('--high-color').trim() || '#dc3545';
-        const cLow = style.getPropertyValue('--low-color').trim() || '#ffc107';
-
-        this.chart.updateSeries([{ data: data }]);
-        this.chart.updateOptions({
-            yaxis: { max: config.maxHeight },
-            annotations: {
-                yaxis: [
-                    { y: floodedThreshold, y2: config.maxHeight, fillColor: cHigh, opacity: 0.08 },
-                    {
-                        y: floodedThreshold, borderColor: cHigh,
-                        label: {
-                            text: 'น้ำท่วม',
-                            position: 'right', textAnchor: 'end', offsetX: 0, offsetY: -10, borderRadius: 4, borderColor: cHigh,
-                            style: { color: '#fff', background: cHigh, fontSize: '12px', fontWeight: 600, fontFamily: 'Prompt, sans-serif', padding: { left: 8, right: 8, top: 2, bottom: 2 } }
-                        }
-                    },
-                    { y: 0, y2: droughtThreshold, fillColor: cLow, opacity: 0.12 },
-                    {
-                        y: droughtThreshold, borderColor: cLow,
-                        label: {
-                            text: 'น้ำแห้ง',
-                            position: 'right', textAnchor: 'end', offsetX: 0, offsetY: 10, borderRadius: 4, borderColor: cLow,
-                            style: { color: '#333', background: cLow, fontSize: '12px', fontWeight: 600, fontFamily: 'Prompt, sans-serif', padding: { left: 8, right: 8, top: 2, bottom: 2 } }
-                        }
+                yaxis: {
+                    min: 0, max: config.maxHeight,
+                    tickAmount: 5,
+                    labels: {
+                        style: { colors: '#999', fontFamily: 'Prompt, sans-serif' },
+                        formatter: val => val.toFixed(1)
                     }
-                ]
-            }
-        });
-    }
+                },
+                grid: {
+                    borderColor: 'rgba(0,0,0,0.06)',
+                    strokeDashArray: 4,
+                    padding: { right: isMobile ? 0 : 20, left: 10 } // ปรับ Padding
+                },
 
-    destroy() { if (this.chart) this.chart.destroy(); }
-}
+                annotations: {
+                    // ... (ใช้ Code Annotation เดิมของคุณได้เลยครับ ไม่ต้องแก้) ...
+                    yaxis: [
+                        { y: floodedThreshold, y2: config.maxHeight, fillColor: cHigh, opacity: 0.08 },
+                        {
+                            y: floodedThreshold, borderColor: cHigh,
+                            label: {
+                                text: 'น้ำท่วม',
+                                position: 'right', textAnchor: 'end', offsetX: 0, offsetY: -10, borderRadius: 4, borderColor: cHigh,
+                                style: { color: '#fff', background: cHigh, fontSize: '12px', fontWeight: 600, fontFamily: 'Prompt, sans-serif', padding: { left: 8, right: 8, top: 2, bottom: 2 } }
+                            }
+                        },
+                        { y: 0, y2: droughtThreshold, fillColor: cLow, opacity: 0.12 },
+                        {
+                            y: droughtThreshold, borderColor: cLow,
+                            label: {
+                                text: 'น้ำแห้ง',
+                                position: 'right', textAnchor: 'end', offsetX: 0, offsetY: 10, borderRadius: 4, borderColor: cLow,
+                                style: { color: '#333', background: cLow, fontSize: '12px', fontWeight: 600, fontFamily: 'Prompt, sans-serif', padding: { left: 8, right: 8, top: 2, bottom: 2 } }
+                            }
+                        }
+                    ]
+                }
+            };
+            this.chart = new ApexCharts(this.container, options);
+            this.chart.render();
+        }
+
+        update(data, floodedThreshold, droughtThreshold) {
+            if (!this.chart) return;
+            const style = getComputedStyle(document.documentElement);
+            const cHigh = style.getPropertyValue('--high-color').trim() || '#dc3545';
+            const cLow = style.getPropertyValue('--low-color').trim() || '#ffc107';
+
+            this.chart.updateSeries([{ data: data }]);
+            this.chart.updateOptions({
+                yaxis: { max: config.maxHeight },
+                annotations: {
+                    yaxis: [
+                        { y: floodedThreshold, y2: config.maxHeight, fillColor: cHigh, opacity: 0.08 },
+                        {
+                            y: floodedThreshold, borderColor: cHigh,
+                            label: {
+                                text: 'น้ำท่วม',
+                                position: 'right', textAnchor: 'end', offsetX: 0, offsetY: -10, borderRadius: 4, borderColor: cHigh,
+                                style: { color: '#fff', background: cHigh, fontSize: '12px', fontWeight: 600, fontFamily: 'Prompt, sans-serif', padding: { left: 8, right: 8, top: 2, bottom: 2 } }
+                            }
+                        },
+                        { y: 0, y2: droughtThreshold, fillColor: cLow, opacity: 0.12 },
+                        {
+                            y: droughtThreshold, borderColor: cLow,
+                            label: {
+                                text: 'น้ำแห้ง',
+                                position: 'right', textAnchor: 'end', offsetX: 0, offsetY: 10, borderRadius: 4, borderColor: cLow,
+                                style: { color: '#333', background: cLow, fontSize: '12px', fontWeight: 600, fontFamily: 'Prompt, sans-serif', padding: { left: 8, right: 8, top: 2, bottom: 2 } }
+                            }
+                        }
+                    ]
+                }
+            });
+        }
+
+        destroy() { if (this.chart) this.chart.destroy(); }
+    }
 
     // --- INSIGHTS MODAL FUNCTIONS (4 Rows Layout) ---
     function showInsightsPopup() {
@@ -463,18 +505,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const now = Date.now();
         const oneHourAgo = now - (60 * 60 * 1000);
         const data1h = allData.filter(d => d.timestamp >= oneHourAgo);
-        
-        if (data1h.length < 2) { 
-            alert('ข้อมูลใน 1 ชั่วโมงที่ผ่านมามีน้อยเกินไปสำหรับการวิเคราะห์'); 
-            return; 
+
+        if (data1h.length < 2) {
+            alert('ข้อมูลใน 1 ชั่วโมงที่ผ่านมามีน้อยเกินไปสำหรับการวิเคราะห์');
+            return;
         }
 
         // --- คำนวณ Rate & Trend ---
-        const latestPoint = data1h[0]; 
+        const latestPoint = data1h[0];
         const oldestPoint = data1h[data1h.length - 1];
         const timeDiffHours = (latestPoint.timestamp - oldestPoint.timestamp) / (1000 * 60 * 60);
         let rateOfRise = 0;
-        
+
         if (timeDiffHours > 0) {
             rateOfRise = (latestPoint.height - oldestPoint.height) / timeDiffHours;
         }
@@ -483,9 +525,9 @@ document.addEventListener('DOMContentLoaded', () => {
         let trendText = 'ทรงตัว';
         let trendColor = 'var(--text-secondary)';
 
-        if (rateOfRise > 0.01) { 
+        if (rateOfRise > 0.01) {
             trendIcon = '↑'; trendText = 'กำลังเพิ่มขึ้น'; trendColor = 'var(--high-color)';
-        } else if (rateOfRise < -0.01) { 
+        } else if (rateOfRise < -0.01) {
             trendIcon = '↓'; trendText = 'กำลังลดลง'; trendColor = 'var(--normal-color)';
         }
 
@@ -496,7 +538,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         for (let i = 0; i < sortedData.length - 1; i++) {
             const p1 = sortedData[i];
-            const p2 = sortedData[i+1];
+            const p2 = sortedData[i + 1];
             const diff = p2.timestamp - p1.timestamp;
 
             if (p1.height > config.floodedThreshold) floodMs += diff;
@@ -517,14 +559,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // --- แสดงผล ---
         // 1. แนวโน้ม
-        document.getElementById('insightTrend').innerHTML = 
+        document.getElementById('insightTrend').innerHTML =
             `<span style="color: ${trendColor}; font-size: 1.1em;">${trendIcon} ${trendText}</span>`;
-        
+
         // 2. อัตรา
         const sign = rateOfRise > 0 ? '+' : '';
-        document.getElementById('insightRate').innerHTML = 
+        document.getElementById('insightRate').innerHTML =
             `${sign}${rateOfRise.toFixed(2)} <span style="font-size:0.8em; color:#666;">m/ชม.</span>`;
-        
+
         // 3. ระยะเวลา
         const floodColor = floodMs > 0 ? 'var(--high-color)' : 'var(--text-primary)';
         document.getElementById('insightFlood').innerHTML = `<span style="color: ${floodColor}">${formatDuration(floodMs)}</span>`;
@@ -538,8 +580,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         elements.insightsModal.style.display = 'block';
     }
-    
+
     function hideInsightsPopup() { elements.insightsModal.style.display = 'none'; }
 
-    init(); 
+    init();
 });
