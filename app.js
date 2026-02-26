@@ -136,6 +136,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const detailsIcon = document.getElementById('detailsIcon');
 
         if (toggleDetailsBtn && tankDetailsContainer) {
+            // เปิดข้อมูลบ่อเป็น default
+            tankDetailsContainer.classList.add('show');
+            if (detailsIcon) {
+                detailsIcon.style.transform = 'rotate(180deg)';
+            }
+
             toggleDetailsBtn.addEventListener('click', () => {
                 tankDetailsContainer.classList.toggle('show');
                 if (tankDetailsContainer.classList.contains('show')) {
