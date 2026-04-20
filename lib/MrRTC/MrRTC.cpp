@@ -9,7 +9,7 @@ bool MrRTC::begin(int sdaPin, int sclPin) {
     //Connect with I2C
     if (!_rtc.begin()) {
         Serial.println("ERROR: RTC Module not found! Check wiring.");
-        return false; // บอกโปรแกรมหลักว่า "พังนะ"
+        return false;
     }
 
     // Check if RTC lost power

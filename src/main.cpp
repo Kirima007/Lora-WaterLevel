@@ -24,20 +24,26 @@ void countingRain();
 
 void setup() {
   Serial.begin(115200); 
-  rtc.begin();
-  attachInterrupt(digitalPinToInterrupt(RAIN_PIN), countingRain, FALLING); 
+  rtc.begin(32,33);
+  // attachInterrupt(digitalPinToInterrupt(RAIN_PIN), countingRain, FALLING); 
   
   pinMode(RAIN_PIN, INPUT_PULLUP);
   nextCalc = millis() + CALC_INTERVAL;
+  rtc.setDateTime(1776703185);
 }
 
 void loop() {
-  timer = millis();
-  if(timer > nextCalc) {
-    nextCalc = timer + CALC_INTERVAL;
-    Serial.print("Total Tips: ");
-    Serial.println((float) rainTrigger);     
-  }
+  // timer = millis();
+  // if(timer > nextCalc) {
+  //   nextCalc = timer + CALC_INTERVAL;
+  //   Serial.print("Total Tips: ");
+  //   Serial.println((float) rainTrigger);     
+  // }
+  String date = rtc.getISO();
+  Serial.print(date);
+  Serial.print("    UNIX : ");
+  Serial.println(rtc.getUnix());
+  delay(500);
 }
 
 void countingRain() {
